@@ -100,7 +100,7 @@ export const Products = () => {
           transition: "transform 0.3s ease, box-shadow 0.3s ease",
           "&:hover": {
             transform: "translateY(-10px)",
-            boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+            boxShadow: "0 10px 20px rgb(232 168 14)",
           },
         }}
               >
@@ -207,7 +207,7 @@ export const Products = () => {
                       color: "gray",
                       py: 1.5,
                       "&:hover": {
-                        backgroundColor: "rgb(216 113 45 / 68%)",
+                        backgroundColor: "rgb(232 168 14)",
                         color: "white",
                       },
                     }}
@@ -225,7 +225,7 @@ export const Products = () => {
                       borderLeft: "1px solid #eee",
                       borderRight: "1px solid #eee",
                       "&:hover": {
-                        backgroundColor: "rgb(216 113 45 / 68%)",
+                        backgroundColor: "rgb(232 168 14)",
                         color: "white",
                       },
                     }}
@@ -241,7 +241,7 @@ export const Products = () => {
                       color: "gray",
                       py: 1.5,
                       "&:hover": {
-                        backgroundColor: "rgb(216 113 45 / 68%)",
+                        backgroundColor: "rgb(232 168 14)",
                         color: "white",
                       },
                     }}

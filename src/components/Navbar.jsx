@@ -14,9 +14,11 @@ import {
   Badge,
   useTheme,
   Divider,
+  Snackbar,
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
+
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
@@ -26,13 +28,17 @@ import {
   ShoppingCart as ShoppingCartIcon,
   Language as LanguageIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
+  Brightness4 as Brightness4Icon,
+  Brightness7 as Brightness7Icon,
 } from "@mui/icons-material";
 
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../services/AuthContext";
+import { ThemeContext } from "../services/ThemeContext";
 
 export const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+  const { toggleMode } = useContext(ThemeContext);
   const theme = useTheme();
   // State for all menus
   const [anchorEl, setAnchorEl] = useState(null);
@@ -44,6 +50,19 @@ export const Navbar = () => {
   const [blogNestedMenuAnchorEl, setBlogNestedMenuAnchorEl] = useState(null);
 
   const isAuthenticated = !!user;
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const showSnackbar = (message) => {
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
+  };
+
+  const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
+  const handleUserMenuOpen = (event) =>
+    setUserMenuAnchorEl(event.currentTarget);
+  const handleUserMenuClose = () => setUserMenuAnchorEl(null);
 
   // Menu handlers
   const handleMenu = (event) => {
@@ -57,6 +76,7 @@ export const Navbar = () => {
     setPortfolioNestedMenuAnchorEl(null);
     setBlogNestedMenuAnchorEl(null);
   };
+  const navigate = useNavigate();
 
   const handleLanguageMenuOpen = (event) => {
     setLanguageMenuAnchorEl(event.currentTarget);
@@ -130,7 +150,7 @@ export const Navbar = () => {
             minWidth: "180px",
             textDecoration: "none",
             "&:hover": {
-              backgroundColor: theme.palette.action.hover,
+              backgroundColor: theme.custom.navbar,
               color: theme.palette.primary.main,
             },
           }}
@@ -147,18 +167,17 @@ export const Navbar = () => {
       color="default"
       elevation={0}
       sx={{
-        backgroundColor: "rgba(0, 0, 0, 0.1)",
+        backgroundColor: "rgba(255, 255, 255, 0.21)",
         borderBottom: `1px solid ${theme.palette.divider}`,
       }}
     >
       {/* Top Header Area */}
       <Toolbar
         sx={{
-          background:
-            "linear-gradient(to right, rgba(216, 113, 45, 0.3), rgba(190, 190, 190, 0.9))",
+          background: ` ${theme.custom.navbar}`,
           minHeight: "48px !important",
           paddingX: { xs: 2, md: 4 },
-          color: theme.palette.text.secondary,
+          color: theme.palette.text.main,
         }}
       >
         <Container
@@ -215,40 +234,72 @@ export const Navbar = () => {
           {/* User Actions */}
           <Grid sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {/* Language Selector would go here if needed */}
-
+                <IconButton onClick={toggleMode} color="grey" sx={{ ml: 1 }}>
+                  {theme.palette.mode === "dark" ? (
+                    <Brightness7Icon />
+                  ) : (
+                    <Brightness4Icon />
+                  )}
+                </IconButton>
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{ mx: 1, height: "16px", alignSelf: "center" }}
+                />
             {/* Login Link */}
             {user ? (
               <>
-                <Typography
-                  variant="body2"
+                <Button
+                  onClick={handleUserMenuOpen}
                   sx={{
+                    textTransform: "none",
+                    color: theme.palette.primary.main,
+                    fontWeight: "bold",
                     display: "flex",
                     alignItems: "center",
                     gap: 1,
-                    color: theme.palette.primary.main,
-                    fontWeight: "bold",
                   }}
                 >
-                  {user.firstName} {user.lastName} שלום
-                </Typography>
-                <Button
-                  variant="text"
-                  onClick={logout}
-                  sx={{
-                    fontSize: "0.8rem",
-                    color: "rgb(143, 67, 44)",
-                    textTransform: "none",
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      color: "darkred",
-                    },
-                  }}
-                >
-                  התנתק
+                  <PersonIcon fontSize="small" />
+                  {user.firstName} {user.lastName}
+                  <KeyboardArrowDownIcon fontSize="small" />
                 </Button>
+
+                <Menu
+                  anchorEl={userMenuAnchorEl}
+                  open={Boolean(userMenuAnchorEl)}
+                  onClose={handleUserMenuClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                >
+                  <MenuItem
+                    component={RouterLink}
+                    to="/profile"
+                    onClick={handleUserMenuClose}
+                  >
+                    פרופיל אישי
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleUserMenuClose();
+                      logout();
+                      navigate("/");
+                      showSnackbar("התנתקת בהצלחה");
+                    }}
+                  >
+                    התנתק
+                  </MenuItem>
+                </Menu>
               </>
             ) : (
               <>
+                
                 <RouterLink
                   to="/login"
                   style={{
@@ -287,12 +338,6 @@ export const Navbar = () => {
                 >
                   <Typography variant="body2">הרשמה</Typography>
                 </RouterLink>
-
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  sx={{ mx: 1, height: "16px", alignSelf: "center" }}
-                />
               </>
             )}
 
@@ -303,36 +348,43 @@ export const Navbar = () => {
             />
 
             {/* עגלה Link */}
-            <Link
-              href="#"
-              color="inherit"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                textDecoration: "none",
-                "&:hover": { color: theme.palette.primary.main },
-              }}
-            >
-              <Badge
-                badgeContent={2}
-                color="secondary"
+            {user ? (
+              <Link
+                href="#"
+                color="inherit"
                 sx={{
-                  "& .MuiBadge-badge": {
-                    fontSize: "10px",
-                    minWidth: "16px",
-                    height: "16px",
-                    padding: "0 4px",
-                  },
+                  display: "flex",
+                  alignItems: "center",
+                  textDecoration: "none",
+                  "&:hover": { color: theme.palette.primary.main },
                 }}
               >
-                <ShoppingCartIcon
-                  sx={{ color: theme.palette.primary.main, fontSize: "small" }}
-                />
-              </Badge>
-              <Typography variant="body2" sx={{ ml: 0.5 }}>
-                עגלה
-              </Typography>
-            </Link>
+                <Badge
+                  badgeContent={2}
+                  color="secondary"
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      fontSize: "10px",
+                      minWidth: "16px",
+                      height: "16px",
+                      padding: "0 4px",
+                    },
+                  }}
+                >
+                  <ShoppingCartIcon
+                    sx={{
+                      color: theme.palette.primary.main,
+                      fontSize: "small",
+                    }}
+                  />
+                </Badge>
+                <Typography variant="body2" sx={{ ml: 0.5 }}>
+                  עגלה
+                </Typography>
+              </Link>
+            ) : (
+              <Typography variant="body2" sx={{ ml: 0.5 }}></Typography>
+            )}
           </Grid>
         </Container>
       </Toolbar>
@@ -340,8 +392,7 @@ export const Navbar = () => {
       {/* Main Navbar Area */}
       <Toolbar
         sx={{
-          background:
-            "linear-gradient(to right, rgba(216, 113, 45, 0.3), rgba(190, 190, 190, 0.9))",
+          background: `linear-gradient(to top , rgba(148, 130, 119, 0.68), ${theme.custom.navbar})`,
           paddingX: { xs: 2, md: 4 },
         }}
       >
@@ -483,6 +534,13 @@ export const Navbar = () => {
               </MenuItem>
             </Menu>
           </Box>
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={4000}
+            onClose={() => setSnackbarOpen(false)}
+            message={snackbarMessage}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          />
         </Container>
       </Toolbar>
     </AppBar>

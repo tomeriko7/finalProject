@@ -84,7 +84,7 @@ const Login = () => {
       <div style={styles.card}>
         <div style={styles.header}>
           <h1 style={styles.title}>התחברות</h1>
-          <p style={styles.subtitle}>יש להכניס פרטים כדי להתחבר לחשבון</p>
+          <p style={styles.subtitle}>התחבר לחשבון והתחל להזמין</p>
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form} noValidate>

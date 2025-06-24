@@ -23,11 +23,13 @@ function About() {
           elevation={0}
           sx={{
             p: { xs: 3, sm: 6 },
-            background: ` linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.8)),url("https://cdn.pixabay.com/photo/2020/07/20/05/58/fig-5421920_1280.png")`,
+            backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
             borderRadius: 6,
             border: "1px solid #e0e0e0",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+            boxShadow: "0px 4px 20px rgba(193, 177, 177, 0.15)",
             direction: "rtl",
+            
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
@@ -35,7 +37,7 @@ function About() {
             <Typography
               variant={isMobile ? "h5" : "h4"}
               fontWeight="bold"
-              sx={{ color: "#1b5e20", mr: 2 }}
+              sx={{ color: theme.palette.text.primary, mr: 2 }}
             >
               אודות משתלת הטנא
             </Typography>
@@ -48,7 +50,7 @@ function About() {
             sx={{
               fontSize: isMobile ? "1.15rem" : "1.35rem",
               lineHeight: 2,
-              color: "#333",
+              color: theme.palette.text.primary,
               fontFamily: "Assistant, sans-serif",
             }}
           >

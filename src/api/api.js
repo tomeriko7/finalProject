@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -26,11 +26,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const originalRequest = error.config;
+
+    // רק אם זה מ־/profile, לא מוחקים מיד
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      // window.location.href = "/login";
+      console.warn("⚠️ שגיאת 401 - לא מוחק טוקן אוטומטית");
+      // תוכל כאן להציג Snackbar או להפנות לדף התחברות בצורה רכה יותר
     }
+
     return Promise.reject(error);
   }
 );
@@ -103,7 +106,7 @@ export const handleApiError = (error) => {
       case 400:
         return data.message || "Invalid input. Please check your data.";
       case 401:
-        return "Please login to continue.";
+        return "פרטי משתמש שגויים , נסה שוב 🫣 ";
       case 403:
         return "You don't have permission for this action.";
       case 404:

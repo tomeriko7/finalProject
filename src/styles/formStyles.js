@@ -63,7 +63,7 @@ backgroundRepeat: "no-repeat",
     borderRadius: "16px",
     boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
     padding: "40px",
-    margin: "20px 0",
+    margin: "20px auto",
   },
   header: {
     textAlign: "center",
@@ -207,6 +207,25 @@ backgroundRepeat: "no-repeat",
     color: "rgb(25, 115, 96)",
     textDecoration: "none",
     fontWeight: "500",
+  },
+   // סטייל RTL ללייבלים ול־TextField
+  rtlInputStyles : {
+    textAlign: "right",
+    "& fieldset": {
+      paddingRight: "8px",
+      paddingLeft: 0,
+      "& legend": {
+        textAlign: "right",
+        paddingRight: 0,
+        paddingLeft: 2,
+        transformOrigin: "top right",
+      },
+    },
+  },
+  rtlLabelStyles : {
+    right: "25px",
+    left: "auto",
+    textAlign: "right",
   },
 };
 export default styles;

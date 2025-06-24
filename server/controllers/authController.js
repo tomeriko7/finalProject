@@ -231,37 +231,26 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    const allowedFields = ['firstName', 'lastName', 'phone', 'address', 'dateOfBirth', 'preferences'];
     const updates = {};
 
-    // Only include allowed fields
-    Object.keys(req.body).forEach(key => {
-      if (allowedFields.includes(key)) {
-        updates[key] = req.body[key];
-      }
-    });
+    // שדות בסיסיים
+    if (req.body.firstName) updates.firstName = req.body.firstName;
+    if (req.body.lastName) updates.lastName = req.body.lastName;
+    if (req.body.phone) updates.phone = req.body.phone;
 
-    // Check if there are any updates
+    // כתובת מקוננת
+    if (req.body.address) {
+      updates.address = {};
+      if (req.body.address.street) updates.address.street = req.body.address.street;
+      if (req.body.address.city) updates.address.city = req.body.address.city;
+      if (req.body.address.zipCode) updates.address.zipCode = req.body.address.zipCode;
+    }
+
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         success: false,
         message: 'No valid fields to update'
       });
-    }
-
-    // Check if phone number is being updated and already exists
-    if (updates.phone) {
-      const existingPhone = await User.findOne({ 
-        phone: updates.phone, 
-        _id: { $ne: req.user.id } 
-      });
-      
-      if (existingPhone) {
-        return res.status(400).json({
-          success: false,
-          message: 'Phone number already exists'
-        });
-      }
     }
 
     const user = await User.findByIdAndUpdate(
@@ -288,25 +277,12 @@ const updateProfile = async (req, res) => {
         email: user.email,
         phone: user.phone,
         address: user.address,
-        dateOfBirth: user.dateOfBirth,
-        preferences: user.preferences,
         updatedAt: user.updatedAt
       }
     });
 
   } catch (error) {
     console.error('Update profile error:', error);
-    
-    // Handle MongoDB validation error
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({
-        success: false,
-        message: 'Validation Error',
-        errors: messages
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: 'Server error during profile update',

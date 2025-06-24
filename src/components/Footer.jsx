@@ -7,11 +7,13 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import { useTheme } from "@mui/material/styles";
 
 export default function SimpleBottomNavigation() {
   const [value, setValue] = React.useState(0);
 
  
+  const theme = useTheme();
 
   const [valuelink, setValueLink] = React.useState(0);
 
@@ -35,7 +37,7 @@ export default function SimpleBottomNavigation() {
             setValue(newValue);
           }}
           sx={{
-            backgroundColor: "black",
+            backgroundColor: theme.palette.background,
 
             width: "100%",
           }}
@@ -43,7 +45,7 @@ export default function SimpleBottomNavigation() {
           <BottomNavigationAction
             sx={{
               // כאן מועבר הסגנון לקומפוננטת Tabs
-              color: "whitesmoke", // צבע טקסט לטאבים לא פעילים
+              color: "rgb(232 168 14)", // צבע טקסט לטאבים לא פעילים
             }}
             label="Recents"
             icon={<RestoreIcon />}
@@ -51,7 +53,7 @@ export default function SimpleBottomNavigation() {
           <BottomNavigationAction
             sx={{
               // כאן מועבר הסגנון לקומפוננטת Tabs
-              color: "whitesmoke", // צבע טקסט לטאבים לא פעילים
+              color: "rgb(232 168 14)", // צבע טקסט לטאבים לא פעילים
             }}
             label="Favorites"
             icon={<FavoriteIcon />}
@@ -59,7 +61,7 @@ export default function SimpleBottomNavigation() {
           <BottomNavigationAction
             sx={{
               // כאן מועבר הסגנון לקומפוננטת Tabs
-              color: "whitesmoke", // צבע טקסט לטאבים לא פעילים
+              color: "rgb(232 168 14)", // צבע טקסט לטאבים לא פעילים
             }}
             label="Nearby"
             icon={<LocationOnIcon />}

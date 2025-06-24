@@ -27,15 +27,18 @@ function Contact() {
       <Box sx={{ maxWidth: 700, mx: "auto", px: 2, pb: 4,mt:3, }}>
         {/* טופס צור קשר עם תיחום */}
         <Box
-          sx={{
-            mb: 3,
-            p: 3,
-            border: "1px solid #ccc",
-            borderRadius: 2,
-            backgroundColor: "#fafafa",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-          }}
-        >
+  sx={{
+    mb: 3,
+    p: 3,
+    border: "1px solid",
+    borderColor: theme.palette.divider,
+    borderRadius: 2,
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    boxShadow: "0px 4px 20px rgba(193, 177, 177, 0.15)", // בוקס שאדו חזק יותר
+  }}
+>
+
           <Box sx={{ mb: 2, textAlign: "right" }}>
             <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
                צור קשר
@@ -54,6 +57,7 @@ function Contact() {
                 textAlign: "center",
                 fontWeight: "bold",
                 color: "#2e7d32",
+                
               }}
             >
               ההודעה נשלחה בהצלחה! נחזור אליך בהקדם.
@@ -77,6 +81,7 @@ function Contact() {
                     border: "1px solid #ccc",
                     fontSize: 16,
                     boxSizing: "border-box",
+                    boxShadow:"0px 4px 20px rgba(241, 236, 236, 0.52)"
                     
                   }}
                 />
@@ -99,6 +104,7 @@ function Contact() {
                     border: "1px solid #ccc",
                     fontSize: 16,
                     boxSizing: "border-box",
+                    boxShadow:"0px 4px 20px rgba(241, 236, 236, 0.52)"
                   }}
                 />
               </Box>
@@ -121,6 +127,7 @@ function Contact() {
                     fontSize: 16,
                     boxSizing: "border-box",
                     resize: "vertical",
+                    boxShadow:"0px 4px 20px rgba(241, 236, 236, 0.52)"
                   }}
                 />
               </Box>
@@ -138,6 +145,7 @@ function Contact() {
                   fontSize: 16,
                   cursor: "pointer",
                   transition: "background-color 0.3s",
+                  boxShadow:"0px 4px 20px rgba(193 146 115 / 78%)"
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgb(123 59 17 / 68%)")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = styles.submitButton.backgroundColor)}
@@ -148,21 +156,19 @@ function Contact() {
           )}
         </Box>
 
-       <Box
+<Box
   sx={{
+    mb: 3,
     p: 3,
-    border: "1px solid #ccc",
+    border: "1px solid",
+    borderColor: theme.palette.divider,
     borderRadius: 2,
-    backgroundColor: "#fafafa",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-    direction: "rtl",
-    display: "flex",
-    flexDirection: isSmallScreen ? "column" : "row",
-    gap: 3,
-    alignItems: "flex-start",
-    mt: 4,
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    boxShadow: "0px 4px 20px rgba(193, 177, 177, 0.15)", // בוקס שאדו חזק יותר
   }}
 >
+
   {/* תיבת מפה */}
   <Box sx={{ flex: 1, minWidth: 0 }}>
     <Typography

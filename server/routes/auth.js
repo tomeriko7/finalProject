@@ -12,7 +12,11 @@ const {
   verifyToken
 } = require('../controllers/authController');
 
+
+
 const router = express.Router();
+
+const authMiddleware = require("../middleware/authMiddleware");
 
 // Validation rules for registration
 const registerValidation = [
@@ -95,6 +99,9 @@ const changePasswordValidation = [
 router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
 router.post('/forgot-password', forgotPassword);
+router.get("/profile", authMiddleware, getProfile);
+router.put("/profile", authMiddleware, updateProfileValidation, updateProfile);
+
 
 
 

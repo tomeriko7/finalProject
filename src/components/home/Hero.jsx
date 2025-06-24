@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Box, Container, Typography, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../services/AuthContext";
+
 
 const images = [
   "https://images.pexels.com/photos/39351/purple-grapes-vineyard-napa-valley-napa-vineyard-39351.jpeg",
@@ -8,8 +11,16 @@ const images = [
 ];
 
 export const Hero = () => {
+  const {user} = useContext(AuthContext)
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  const handleShopClick = () =>{
+    if (user) {
+      navigate("/store")
+    } else {
+      navigate("/login")
+    }
+  }
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -118,6 +129,7 @@ export const Hero = () => {
           }}
         >
           <Button
+          onClick={handleShopClick}
             variant="contained"
             color="primary"
             size="large"
@@ -137,6 +149,7 @@ export const Hero = () => {
             לרכישה באתר
           </Button>
           <Button
+          href="/about"
             variant="contained"
             size="large"
             sx={{
