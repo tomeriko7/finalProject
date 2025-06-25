@@ -179,7 +179,7 @@ const Profile = () => {
             InputProps={{ sx: styles.rtlInputStyles }}
           />
           <TextField
-            label="רחוב"
+            label="רחוב ומספר בית"
             name="address.street"
             value={formData.address?.street || ""}
             onChange={handleChange}

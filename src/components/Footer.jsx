@@ -8,11 +8,11 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { useTheme } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 
 export default function SimpleBottomNavigation() {
   const [value, setValue] = React.useState(0);
 
- 
   const theme = useTheme();
 
   const [valuelink, setValueLink] = React.useState(0);
@@ -27,7 +27,7 @@ export default function SimpleBottomNavigation() {
         sx={{
           width: "100%",
           bottom: 0,
-          backgroundColor: "black",
+          backgroundColor: theme.custom.navbar,
         }}
       >
         <BottomNavigation
@@ -68,7 +68,17 @@ export default function SimpleBottomNavigation() {
           />
         </BottomNavigation>
 
-        
+        <Typography
+          variant="body2"
+          align="center"
+          sx={{
+            color: theme.palette.background,
+            padding: "8px",
+            fontSize: "0.75rem",
+          }}
+        >
+          All rights reserved to Tomer Karavani © {new Date().getFullYear()}
+        </Typography>
       </Box>
     </>
   );

@@ -1,7 +1,7 @@
 const styles = {
   registerContainer: {
     minHeight: "100vh",
-    background: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0)), url("https://images.pexels.com/photos/5531416/pexels-photo-5531416.jpeg")`,
+    background: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0)), url("https://images.pexels.com/photos/12567701/pexels-photo-12567701.jpeg")`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -183,7 +183,7 @@ backgroundRepeat: "no-repeat",
   },
   submitButton: {
     padding: "14px",
-    backgroundColor: "rgb(216 113 45 / 68%)",
+    backgroundColor: "rgb(232 168 14)",
     color: "white",
     border: "none",
     borderRadius: "8px",

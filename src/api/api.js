@@ -1,9 +1,12 @@
 // api/api.js
 import axios from "axios";
 
+// API base URL
+export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000",
+  baseURL: API_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -123,6 +126,53 @@ export const handleApiError = (error) => {
   } else {
     return error.message || "An unexpected error occurred.";
   }
+};
+
+// Product API functions
+export const productAPI = {
+  // Get all products
+  getProducts: async (page = 1, search = '') => {
+    const response = await api.get(`/api/products?page=${page}&search=${search}`);
+    return response.data;
+  },
+
+  // Get single product by ID
+  getProductById: async (id) => {
+    const response = await api.get(`/api/products/${id}`);
+    return response.data;
+  },
+
+  // Create a new product
+  createProduct: async (productData) => {
+    const response = await api.post('/api/products', productData);
+    return response.data;
+  },
+
+  // Update a product
+  updateProduct: async (id, productData) => {
+    const response = await api.put(`/api/products/${id}`, productData);
+    return response.data;
+  },
+
+  // Delete a product
+  deleteProduct: async (id) => {
+    const response = await api.delete(`/api/products/${id}`);
+    return response.data;
+  },
+
+  // Upload product image
+  uploadProductImage: async (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const response = await api.post('/api/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.data.imageUrl;
+  },
 };
 
 export default api;

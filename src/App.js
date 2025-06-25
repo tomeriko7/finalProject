@@ -1,20 +1,18 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
-
-import HomePage from "./pages/HomePage";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Store from "./pages/Store";
+import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./services/AuthContext";
-import Profile from "./pages/Profile";
-
+import { CustomThemeProvider } from "./services/ThemeContext";
+import { Provider } from 'react-redux';
+import { store } from './store/store';
 function App() {
   return (
+        <Provider store={store}>
+
     <AuthProvider>
-      <Router>
+      <CustomThemeProvider>
+        <Router>
         <div
           className="App"
           style={{
@@ -23,22 +21,27 @@ function App() {
             minHeight: "100vh",
           }}
         >
-          <Navbar />
+          {/* Hide navbar on admin pages */}
+          <Routes>
+            <Route path="/admin/*" element={null} />
+            <Route path="*" element={<Navbar />} />
+          </Routes>
+
           <main style={{ flex: 1 }}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/store" element={<Store />} />
-            </Routes>
+            <AppRoutes />
           </main>
-          <Footer />
+
+          {/* Hide footer on admin pages */}
+          <Routes>
+            <Route path="/admin/*" element={null} />
+            <Route path="*" element={<Footer />} />
+          </Routes>
         </div>
       </Router>
+      </CustomThemeProvider>
     </AuthProvider>
+        </Provider>
+
   );
 }
 

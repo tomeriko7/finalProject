@@ -88,7 +88,7 @@ const Register = () => {
       newErrors.confirmPassword = "יש להזין אימות סיסמה";
     if (!formData.phone.trim()) newErrors.phone = "יש להזין מספר טלפון";
     if (!formData.address.street.trim()) {
-      newErrors.address.street = "יש להזין רחוב";
+      newErrors.address.street = "יש להזין רחוב ומספר בית";
     }
     if (!formData.address.city.trim()) {
       newErrors.address.city = "יש להזין עיר";
@@ -329,7 +329,7 @@ const Register = () => {
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>כתובת</h3>
               <div style={styles.field}>
-                <label style={styles.label}>רחוב</label>
+                <label style={styles.label}>רחוב ומספר בית</label>
                 <input
                   type="text"
                   name="address.street"

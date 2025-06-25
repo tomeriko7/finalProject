@@ -1,7 +1,7 @@
 // controllers/authController.js
-const User = require('../models/User');
-const { generateToken } = require('../utils/generateToken');
-const { validationResult } = require('express-validator');
+import User from '../models/User.js';
+import { generateToken } from '../utils/generateToken.js';
+import { validationResult } from 'express-validator';
 
 // Register new user
 const register = async (req, res) => {
@@ -181,7 +181,7 @@ const login = async (req, res) => {
 // Get current user profile
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     
     if (!user) {
       return res.status(404).json({
@@ -254,7 +254,7 @@ const updateProfile = async (req, res) => {
     }
 
     const user = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       updates,
       { new: true, runValidators: true }
     );
@@ -445,7 +445,7 @@ const verifyToken = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   register,
   login,
   getProfile,

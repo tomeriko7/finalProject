@@ -1,5 +1,5 @@
 // utils/generateToken.js
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 // Generate access token (short-lived)
 const generateToken = (userId) => {
@@ -224,7 +224,7 @@ const verifyPasswordResetToken = (token) => {
   }
 };
 
-module.exports = {
+export {
   // Main token functions
   generateToken,
   generateRefreshToken,

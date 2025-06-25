@@ -1,7 +1,17 @@
 import React, { createContext, useState, useEffect, useMemo } from "react";
 import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
+import rtlPlugin from "stylis-plugin-rtl";
+import { prefixer } from "stylis";
+import { CacheProvider } from "@emotion/react";
+import createCache from "@emotion/cache";
 
 export const ThemeContext = createContext();
+
+// יצירת קונפיגורציית קאש לתמיכה ב-RTL
+const cacheRtl = createCache({
+  key: 'muirtl',
+  stylisPlugins: [prefixer, rtlPlugin],
+});
 
 export const CustomThemeProvider = ({ children }) => {
   const [mode, setMode] = useState(() => {
@@ -19,6 +29,8 @@ export const CustomThemeProvider = ({ children }) => {
 const theme = useMemo( 
   () =>
     createTheme({
+      // הגדרת כיוון ה-RTL
+      direction: 'rtl',
       palette: {
         mode,
         primary: {
@@ -42,10 +54,12 @@ const theme = useMemo(
 
   return (
     <ThemeContext.Provider value={{ mode, toggleMode }}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {children}
-      </ThemeProvider>
+      <CacheProvider value={cacheRtl}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </ThemeProvider>
+      </CacheProvider>
     </ThemeContext.Provider>
   );
 };
