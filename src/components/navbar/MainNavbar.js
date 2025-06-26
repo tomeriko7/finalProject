@@ -18,8 +18,6 @@ import {
   ListItemIcon,
   Avatar,
   Stack,
-  useMediaQuery,
-  useTheme as useMuiTheme,
 } from "@mui/material";
 
 import {
@@ -59,12 +57,7 @@ const MainNavbar = ({
   logout,
 }) => {
   const navigate = useNavigate();
-  const muiTheme = useMuiTheme(); // גישה לערכת העיצוב של MUI
 
-  // אם לא העבירו פרופס של isMobile, נזהה אוטומטית
-  const isActuallyMobile = isMobile || useMediaQuery(muiTheme.breakpoints.down('sm'));
-  const isActuallyTablet = isTablet || useMediaQuery(muiTheme.breakpoints.between('sm', 'md'));
-  
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [favoritesAnchorEl, setFavoritesAnchorEl] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -224,11 +217,10 @@ const MainNavbar = ({
                 setSearchOpen={setSearchOpen}
                 theme={theme}
                 showSnackbar={showSnackbar}
-                isCompact={isActuallyTablet}
+                isCompact={isTablet}
               />
             </Box>
 
-            {/* דסקטופ - אייקונים למועדפים ועגלה */}
             {user && (
               <Box
                 sx={{
@@ -242,11 +234,10 @@ const MainNavbar = ({
                     color="inherit"
                     onClick={handleFavoritesOpen}
                     sx={{
-                      transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out",
-                      color: "text.primary",
+                      transition: "color 0.2s ease-in-out",
+                      color: "#222",
                       "&:hover": {
                         color: theme.palette.primary.main,
-                        transform: "scale(1.1)",
                       },
                     }}
                   >
@@ -262,9 +253,15 @@ const MainNavbar = ({
                       }}
                     >
                       {favoritesCount > 0 ? (
-                        <FavoriteIcon fontSize="small" sx={{ color: "inherit" }} />
+                        <FavoriteIcon
+                          fontSize="small"
+                          sx={{ color: "inherit" }}
+                        />
                       ) : (
-                        <FavoriteBorderIcon fontSize="small" sx={{ color: "inherit" }} />
+                        <FavoriteBorderIcon
+                          fontSize="small"
+                          sx={{ color: "inherit" }}
+                        />
                       )}
                     </Badge>
                   </IconButton>
@@ -274,7 +271,6 @@ const MainNavbar = ({
               </Box>
             )}
 
-            {/* מובייל - אייקונים של חיפוש, מועדפים, עגלה ותפריט */}
             <Box
               sx={{
                 display: { xs: "flex", md: "none" },
@@ -287,10 +283,8 @@ const MainNavbar = ({
                 onClick={() => setSearchOpen(true)}
                 size={isSmall ? "small" : "medium"}
                 sx={{
-                  transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out",
                   "&:hover": {
                     color: theme.palette.primary.main,
-                    transform: "scale(1.1)",
                   },
                 }}
               >
@@ -305,10 +299,9 @@ const MainNavbar = ({
                       onClick={handleFavoritesOpen}
                       size={isSmall ? "small" : "medium"}
                       sx={{
-                        transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out",
+                        transition: "color 0.2s ease-in-out",
                         "&:hover": {
                           color: theme.palette.primary.main,
-                          transform: "scale(1.1)",
                         },
                       }}
                     >
@@ -324,9 +317,9 @@ const MainNavbar = ({
                         }}
                       >
                         {favoritesCount > 0 ? (
-                          <FavoriteIcon sx={{ color: "inherit" }} />
+                          <FavoriteIcon color="primary" />
                         ) : (
-                          <FavoriteBorderIcon sx={{ color: "inherit" }} />
+                          <FavoriteBorderIcon color="primary" />
                         )}
                       </Badge>
                     </IconButton>
@@ -339,10 +332,9 @@ const MainNavbar = ({
                       to="/cart"
                       size={isSmall ? "small" : "medium"}
                       sx={{
-                        transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out",
+                        transition: "color 0.2s ease-in-out",
                         "&:hover": {
                           color: theme.palette.primary.main,
-                          transform: "scale(1.1)",
                         },
                       }}
                     >
@@ -357,7 +349,7 @@ const MainNavbar = ({
                           },
                         }}
                       >
-                        <ShoppingCartIcon sx={{ color: "inherit" }} />
+                        <ShoppingCartIcon color="primary" />
                       </Badge>
                     </IconButton>
                   </Tooltip>
@@ -369,13 +361,7 @@ const MainNavbar = ({
                 aria-label="פתח תפריט"
                 onClick={toggleMobileDrawer}
                 size={isSmall ? "small" : "medium"}
-                sx={{ 
-                  p: { xs: 0.5, sm: 1 },
-                  transition: "transform 0.2s ease-in-out",
-                  "&:hover": {
-                    transform: "scale(1.1)",
-                  },
-                }}
+                sx={{ p: { xs: 0.5, sm: 1 } }}
               >
                 <MenuIcon />
               </IconButton>
@@ -384,8 +370,7 @@ const MainNavbar = ({
         </Container>
       </Toolbar>
 
-      {/* חיפוש במובייל וטאבלט */}
-      {(isActuallyMobile || isActuallyTablet) && (
+      {(isMobile || isTablet) && (
         <SearchComponent
           searchOpen={searchOpen}
           setSearchOpen={setSearchOpen}
@@ -395,7 +380,6 @@ const MainNavbar = ({
         />
       )}
 
-      {/* מגירת ניווט במובייל */}
       <Drawer
         anchor="right"
         open={mobileDrawerOpen}
@@ -415,7 +399,6 @@ const MainNavbar = ({
             flexDirection: "column",
           }}
         >
-          {/* כותרת המגירה */}
           <Box
             sx={{
               display: "flex",
@@ -435,7 +418,6 @@ const MainNavbar = ({
             </IconButton>
           </Box>
 
-          {/* מידע על המשתמש אם מחובר */}
           {user && (
             <Box
               sx={{
@@ -467,7 +449,6 @@ const MainNavbar = ({
             </Box>
           )}
 
-          {/* מתג מצב יום/לילה */}
           <Box sx={{ p: 1 }}>
             <ListItem disablePadding>
               <ListItemButton
@@ -499,7 +480,6 @@ const MainNavbar = ({
 
           <Divider />
 
-          {/* תפריט ניווט ראשי */}
           <Box sx={{ flex: 1, overflowY: "auto" }}>
             <Typography
               variant="overline"
@@ -528,28 +508,20 @@ const MainNavbar = ({
                         backgroundColor: `${theme.palette.primary.light}20`,
                         transform: "translateX(-4px)",
                       },
-                      py: 1.5, // גובה גדול יותר לקלות הלחיצה במובייל
                     }}
                   >
-                    <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: 40 }}>
+                    <ListItemIcon sx={{ color: theme.palette.primary.main }}>
                       {link.icon}
                     </ListItemIcon>
                     <ListItemText
                       primary={link.title}
-                      sx={{ 
-                        textAlign: "right",
-                        "& .MuiTypography-root": {
-                          fontWeight: 500,
-                          fontSize: "1rem",
-                        }
-                      }}
+                      sx={{ textAlign: "right" }}
                     />
                   </ListItemButton>
                 </ListItem>
               ))}
             </List>
 
-            {/* תפריט משתמש אם מחובר */}
             {user && (
               <>
                 <Typography
@@ -574,7 +546,6 @@ const MainNavbar = ({
                         onClick={toggleMobileDrawer}
                         sx={{
                           borderRadius: 1,
-                          py: 1.5, // גובה גדול יותר לקלות הלחיצה במובייל
                           "&:hover": {
                             backgroundColor: `${theme.palette.primary.light}20`,
                             transform: "translateX(-4px)",
@@ -582,19 +553,13 @@ const MainNavbar = ({
                         }}
                       >
                         <ListItemIcon
-                          sx={{ color: theme.palette.primary.main, minWidth: 40 }}
+                          sx={{ color: theme.palette.primary.main }}
                         >
                           {item.icon}
                         </ListItemIcon>
                         <ListItemText
                           primary={item.title}
-                          sx={{ 
-                            textAlign: "right",
-                            "& .MuiTypography-root": {
-                              fontWeight: 500,
-                              fontSize: "1rem",
-                            }
-                          }}
+                          sx={{ textAlign: "right" }}
                         />
                       </ListItemButton>
                     </ListItem>
@@ -604,7 +569,6 @@ const MainNavbar = ({
             )}
           </Box>
 
-          {/* כפתורי כניסה/יציאה */}
           <Box
             sx={{
               borderTop: `1px solid ${theme.palette.divider}`,
@@ -622,13 +586,12 @@ const MainNavbar = ({
                   justifyContent: "flex-start",
                   textAlign: "right",
                   borderRadius: 2,
-                  py: 1.2, // גובה גדול יותר לקלות הלחיצה במובייל
                 }}
               >
                 התנתק
               </Button>
             ) : (
-              <Stack spacing={1.5}>
+              <Stack spacing={1}>
                 <Button
                   fullWidth
                   variant="contained"
@@ -636,11 +599,7 @@ const MainNavbar = ({
                   to="/login"
                   onClick={toggleMobileDrawer}
                   startIcon={<PersonIcon />}
-                  sx={{ 
-                    borderRadius: 2, 
-                    py: 1.2, // גובה גדול יותר לקלות הלחיצה במובייל
-                    fontWeight: 600,
-                  }}
+                  sx={{ borderRadius: 2 }}
                 >
                   כניסה למערכת
                 </Button>
@@ -650,11 +609,7 @@ const MainNavbar = ({
                   component={RouterLink}
                   to="/register"
                   onClick={toggleMobileDrawer}
-                  sx={{ 
-                    borderRadius: 2, 
-                    py: 1.2, // גובה גדול יותר לקלות הלחיצה במובייל
-                    fontWeight: 600,
-                  }}
+                  sx={{ borderRadius: 2 }}
                 >
                   הרשמה
                 </Button>
@@ -664,11 +619,10 @@ const MainNavbar = ({
         </Box>
       </Drawer>
 
-      {/* דרופדאון מועדפים */}
       <FavoritesDropdown
         anchorEl={favoritesAnchorEl}
         onClose={handleFavoritesClose}
-        isMobile={isActuallyMobile}
+        isMobile={isMobile}
       />
     </>
   );
