@@ -26,6 +26,9 @@ import {
   Tab,
   Menu,
   MenuItem,
+  useMediaQuery,
+  Stack,
+  Collapse
 } from '@mui/material';
 
 import { 
@@ -40,6 +43,8 @@ import {
   Add as AddIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
+  ExpandMore as ExpandMoreIcon,
+  KeyboardArrowRight as KeyboardArrowRightIcon,
 } from '@mui/icons-material';
 
 // Mock data for demonstration
@@ -114,6 +119,11 @@ export const Dashboard = () => {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [expandedSection, setExpandedSection] = useState(null);
+  
+  // Media queries for responsiveness
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -126,17 +136,130 @@ export const Dashboard = () => {
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
   };
+  
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  // Function to render mobile order cards instead of table rows
+  const renderMobileOrderCard = (order) => (
+    <Paper 
+      key={order.id}
+      elevation={0}
+      sx={{ 
+        p: 2, 
+        mb: 2, 
+        borderRadius: 2,
+        border: `1px solid ${theme.palette.divider}`,
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="subtitle2" fontWeight="bold">{order.id}</Typography>
+        <Box
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            px: 1,
+            py: 0.5,
+            borderRadius: 1,
+            bgcolor: `${getStatusColor(order.status)}15`,
+            color: getStatusColor(order.status),
+          }}
+        >
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              bgcolor: getStatusColor(order.status),
+              mr: 1,
+            }}
+          />
+          <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
+            {order.status}
+          </Typography>
+        </Box>
+      </Box>
+      
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        {order.customer} • {order.date}
+      </Typography>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="body2">סכום:</Typography>
+        <Typography variant="subtitle2" fontWeight="bold">{order.amount}</Typography>
+      </Box>
+    </Paper>
+  );
+  
+  // Function to render mobile product cards
+  const renderMobileProductCard = (product) => (
+    <Paper 
+      key={product.name}
+      elevation={0}
+      sx={{ 
+        p: 2, 
+        mb: 2, 
+        borderRadius: 2,
+        border: `1px solid ${theme.palette.divider}`,
+      }}
+    >
+      <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+        {product.name}
+      </Typography>
+      
+      <Grid container spacing={1} sx={{ mb: 1 }}>
+        <Grid item xs={4}>
+          <Typography variant="caption" color="text.secondary">מחיר</Typography>
+          <Typography variant="body2" fontWeight="medium">{product.price}</Typography>
+        </Grid>
+        <Grid item xs={4}>
+          <Typography variant="caption" color="text.secondary">מכירות</Typography>
+          <Typography variant="body2" fontWeight="medium">{product.sales}</Typography>
+        </Grid>
+        <Grid item xs={4}>
+          <Typography variant="caption" color="text.secondary">מלאי</Typography>
+          <Typography variant="body2" fontWeight="medium">{product.stock}</Typography>
+        </Grid>
+      </Grid>
+      
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ width: '100%', mr: 1 }}>
+          <LinearProgress 
+            variant="determinate" 
+            value={product.progress} 
+            sx={{ 
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: `${theme.palette.primary.main}20`,
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: 
+                  product.progress > 80 
+                    ? theme.palette.success.main
+                    : product.progress > 40
+                      ? theme.palette.primary.main
+                      : theme.palette.warning.main
+              }
+            }}
+          />
+        </Box>
+        <Typography variant="body2" color="text.secondary">
+          {product.progress}%
+        </Typography>
+      </Box>
+    </Paper>
+  );
 
   return (
-    <Box sx={{ px: { xs: 2, md: 4 }, py: { xs: 2, md: 3 } }}>
+    <Box sx={{ px: { xs: 0, md: 2 }, py: { xs: 1, md: 2 } }}>
       {/* Statistics Cards */}
-      <Grid container spacing={3} mb={4}>
+      <Grid container spacing={2} mb={3}>
         {mockStatistics.map((stat, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 2, sm: 3 },
                 borderRadius: 2,
                 height: '100%',
                 border: `1px solid ${theme.palette.divider}`,
@@ -151,7 +274,7 @@ export const Dashboard = () => {
                 <Avatar
                   sx={{
                     bgcolor: `${stat.color}15`,
-                    p: 1.5,
+                    p: { xs: 1, sm: 1.5 },
                   }}
                 >
                   <Box sx={{ color: stat.color }}>{stat.icon}</Box>
@@ -173,7 +296,14 @@ export const Dashboard = () => {
                   </Typography>
                 </Box>
               </Box>
-              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+              <Typography 
+                variant={isMobile ? "h5" : "h4"} 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  mb: 0.5,
+                  fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+                }}
+              >
                 {stat.value}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -185,282 +315,416 @@ export const Dashboard = () => {
       </Grid>
 
       {/* Main Content Row */}
-      <Grid container spacing={3}>
-        {/* Left Column - Recent Orders */}
+      <Grid container spacing={2}>
+        {/* Recent Orders Section */}
         <Grid item xs={12} md={8}>
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               borderRadius: 2,
               height: '100%',
               border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                הזמנות אחרונות
-              </Typography>
-              <Box>
-                <IconButton size="small" sx={{ mr: 1 }}>
-                  <RefreshIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={handleMenuOpen}
-                  aria-controls="orders-menu"
-                  aria-haspopup="true"
-                >
-                  <MoreVertIcon fontSize="small" />
-                </IconButton>
-                <Menu
-                  id="orders-menu"
-                  anchorEl={menuAnchorEl}
-                  keepMounted
-                  open={Boolean(menuAnchorEl)}
-                  onClose={handleMenuClose}
-                >
-                  <MenuItem onClick={handleMenuClose}>הצג את כל ההזמנות</MenuItem>
-                  <MenuItem onClick={handleMenuClose}>ייצא לקובץ Excel</MenuItem>
-                  <MenuItem onClick={handleMenuClose}>הדפס דוח</MenuItem>
-                </Menu>
-              </Box>
-            </Box>
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>מספר הזמנה</TableCell>
-                    <TableCell>לקוח</TableCell>
-                    <TableCell>תאריך</TableCell>
-                    <TableCell>סטטוס</TableCell>
-                    <TableCell align="right">סכום</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {mockRecentOrders.map((order) => (
-                    <TableRow key={order.id} hover>
-                      <TableCell sx={{ fontWeight: 'medium' }}>{order.id}</TableCell>
-                      <TableCell>{order.customer}</TableCell>
-                      <TableCell>{order.date}</TableCell>
-                      <TableCell>
-                        <Box
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            bgcolor: `${getStatusColor(order.status)}15`,
-                            color: getStatusColor(order.status),
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              bgcolor: getStatusColor(order.status),
-                              mr: 1,
-                            }}
-                          />
-                          <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-                            {order.status}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'medium' }}>
-                        {order.amount}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <Button 
-                variant="outlined" 
-                size="small"
-                sx={{ borderRadius: 2 }}
+            {/* Expandable section header for mobile */}
+            {isMobile ? (
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  mb: expandedSection === 'orders' ? 2 : 0
+                }}
+                onClick={() => toggleSection('orders')}
               >
-                צפה בכל ההזמנות
-              </Button>
-            </Box>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  הזמנות אחרונות
+                </Typography>
+                <IconButton size="small">
+                  <ExpandMoreIcon 
+                    sx={{
+                      transform: expandedSection === 'orders' ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform 0.3s',
+                    }}
+                  />
+                </IconButton>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                  הזמנות אחרונות
+                </Typography>
+                <Box>
+                  <IconButton size="small" sx={{ mr: 1 }}>
+                    <RefreshIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={handleMenuOpen}
+                    aria-controls="orders-menu"
+                    aria-haspopup="true"
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                  <Menu
+                    id="orders-menu"
+                    anchorEl={menuAnchorEl}
+                    keepMounted
+                    open={Boolean(menuAnchorEl)}
+                    onClose={handleMenuClose}
+                  >
+                    <MenuItem onClick={handleMenuClose}>הצג את כל ההזמנות</MenuItem>
+                    <MenuItem onClick={handleMenuClose}>ייצא לקובץ Excel</MenuItem>
+                    <MenuItem onClick={handleMenuClose}>הדפס דוח</MenuItem>
+                  </Menu>
+                </Box>
+              </Box>
+            )}
+            
+            {/* Mobile Orders List or Desktop Table */}
+            <Collapse in={!isMobile || expandedSection === 'orders'}>
+              {isMobile ? (
+                <Box>
+                  {mockRecentOrders.map(order => renderMobileOrderCard(order))}
+                </Box>
+              ) : (
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>מספר הזמנה</TableCell>
+                        <TableCell>לקוח</TableCell>
+                        <TableCell>תאריך</TableCell>
+                        <TableCell>סטטוס</TableCell>
+                        <TableCell align="right">סכום</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {mockRecentOrders.map((order) => (
+                        <TableRow key={order.id} hover>
+                          <TableCell sx={{ fontWeight: 'medium' }}>{order.id}</TableCell>
+                          <TableCell>{order.customer}</TableCell>
+                          <TableCell>{order.date}</TableCell>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 1,
+                                bgcolor: `${getStatusColor(order.status)}15`,
+                                color: getStatusColor(order.status),
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  bgcolor: getStatusColor(order.status),
+                                  mr: 1,
+                                }}
+                              />
+                              <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
+                                {order.status}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'medium' }}>
+                            {order.amount}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+              
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Button 
+                  variant="outlined" 
+                  size="small"
+                  sx={{ borderRadius: 2 }}
+                  endIcon={isMobile ? <KeyboardArrowRightIcon /> : null}
+                >
+                  צפה בכל ההזמנות
+                </Button>
+              </Box>
+            </Collapse>
           </Paper>
         </Grid>
 
-        {/* Right Column - Latest Customers */}
+        {/* Latest Customers Section */}
         <Grid item xs={12} md={4}>
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               borderRadius: 2,
               height: '100%',
               border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                לקוחות חדשים
-              </Typography>
-              <IconButton size="small">
-                <MoreVertIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            <List>
-              {mockLatestCustomers.map((customer, index) => (
-                <React.Fragment key={customer.name}>
-                  <ListItem alignItems="flex-start" disableGutters>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                        {customer.name.charAt(0)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                          {customer.name}
-                        </Typography>
-                      }
-                      secondary={
-                        <React.Fragment>
-                          <Typography variant="body2" color="text.secondary" component="span">
-                            {customer.email}
+            {/* Expandable section header for mobile */}
+            {isMobile ? (
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  mb: expandedSection === 'customers' ? 2 : 0
+                }}
+                onClick={() => toggleSection('customers')}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  לקוחות חדשים
+                </Typography>
+                <IconButton size="small">
+                  <ExpandMoreIcon 
+                    sx={{
+                      transform: expandedSection === 'customers' ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform 0.3s',
+                    }}
+                  />
+                </IconButton>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                  לקוחות חדשים
+                </Typography>
+                <IconButton size="small">
+                  <MoreVertIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+            
+            <Collapse in={!isMobile || expandedSection === 'customers'}>
+              <List>
+                {mockLatestCustomers.map((customer, index) => (
+                  <React.Fragment key={customer.name}>
+                    <ListItem alignItems="flex-start" disableGutters>
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                          {customer.name.charAt(0)}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                            {customer.name}
                           </Typography>
-                          <br />
-                          <Typography variant="caption" color="text.secondary">
-                            {customer.date}
-                          </Typography>
-                        </React.Fragment>
-                      }
-                    />
-                  </ListItem>
-                  {index < mockLatestCustomers.length - 1 && (
-                    <Divider variant="inset" component="li" />
-                  )}
-                </React.Fragment>
-              ))}
-            </List>
-            <Button
-              variant="text"
-              color="primary"
-              fullWidth
-              sx={{ mt: 2, justifyContent: 'center' }}
-            >
-              צפה בכל הלקוחות
-            </Button>
+                        }
+                        secondary={
+                          <React.Fragment>
+                            <Typography variant="body2" color="text.secondary" component="span">
+                              {customer.email}
+                            </Typography>
+                            <br />
+                            <Typography variant="caption" color="text.secondary">
+                              {customer.date}
+                            </Typography>
+                          </React.Fragment>
+                        }
+                      />
+                    </ListItem>
+                    {index < mockLatestCustomers.length - 1 && (
+                      <Divider variant="inset" component="li" />
+                    )}
+                  </React.Fragment>
+                ))}
+              </List>
+              <Button
+                variant="text"
+                color="primary"
+                fullWidth
+                sx={{ mt: 2, justifyContent: 'center' }}
+                endIcon={isMobile ? <KeyboardArrowRightIcon /> : null}
+              >
+                צפה בכל הלקוחות
+              </Button>
+            </Collapse>
           </Paper>
         </Grid>
 
-        {/* Popular Products */}
+        {/* Popular Products Section */}
         <Grid item xs={12}>
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               borderRadius: 2,
               border: `1px solid ${theme.palette.divider}`,
-              mt: 3,
+              mt: 2,
             }}
           >
-            <Box  sx={{ 
-    display: 'flex', 
-    flexDirection: { xs: 'column', sm: 'row' }, 
-    gap: 1, 
-    alignItems: { xs: 'stretch', sm: 'center' },
-  }}>
-              <Typography variant="h6"  sx={{ fontWeight: 'bold', mb: 2 }}>
-                מוצרים פופולריים
-              </Typography>
-              <Box>
-                <Button 
-                  variant="contained" 
-                  size="small" 
-                  startIcon={<AddIcon />}
-                  sx={{ 
-                    mr: 1,
-                    borderRadius: 2,
-                    boxShadow: 'none'
-                  }}
-                >
-                  מוצר חדש
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  size="small" 
-                  startIcon={<DownloadIcon />}
-                  sx={{ borderRadius: 2 }}
-                >
-                  ייצא
-                </Button>
+            {/* Expandable section header for mobile */}
+            {isMobile ? (
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  mb: expandedSection === 'products' ? 2 : 0
+                }}
+                onClick={() => toggleSection('products')}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  מוצרים פופולריים
+                </Typography>
+                <IconButton size="small">
+                  <ExpandMoreIcon 
+                    sx={{
+                      transform: expandedSection === 'products' ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform 0.3s',
+                    }}
+                  />
+                </IconButton>
               </Box>
-            </Box>
-
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              sx={{
-                mb: 2,
-                '& .MuiTabs-indicator': {
-                  backgroundColor: theme.palette.primary.main,
-                },
-              }}
-            >
-              <Tab label="הכי נמכרים" />
-              <Tab label="חדשים" />
-              <Tab label="במלאי נמוך" />
-            </Tabs>
-
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>שם המוצר</TableCell>
-                    <TableCell align="right">מחיר</TableCell>
-                    <TableCell align="right">מכירות</TableCell>
-                    <TableCell align="right">מלאי</TableCell>
-                    <TableCell align="right">סטטוס</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {mockPopularProducts.map((product) => (
-                    <TableRow key={product.name} hover>
-                      <TableCell sx={{ fontWeight: 'medium' }}>{product.name}</TableCell>
-                      <TableCell align="right">{product.price}</TableCell>
-                      <TableCell align="right">{product.sales}</TableCell>
-                      <TableCell align="right">{product.stock}</TableCell>
-                      <TableCell align="right" sx={{ width: '15%' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Box sx={{ width: '100%', mr: 1 }}>
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={product.progress} 
-                              sx={{ 
-                                height: 6,
-                                borderRadius: 3,
-                                backgroundColor: `${theme.palette.primary.main}20`,
-                                '& .MuiLinearProgress-bar': {
-                                  backgroundColor: 
-                                    product.progress > 80 
-                                      ? theme.palette.success.main
-                                      : product.progress > 40
-                                        ? theme.palette.primary.main
-                                        : theme.palette.warning.main
-                                }
-                              }}
-                            />
-                          </Box>
-                          <Typography variant="body2" color="text.secondary">
-                            {product.progress}%
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            ) : (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' }, 
+                gap: 1, 
+                alignItems: { xs: 'stretch', sm: 'center' },
+                justifyContent: 'space-between',
+                mb: 2
+              }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  מוצרים פופולריים
+                </Typography>
+                <Box>
+                  <Button 
+                    variant="contained" 
+                    size="small" 
+                    startIcon={<AddIcon />}
+                    sx={{ 
+                      mr: 1,
+                      borderRadius: 2,
+                      boxShadow: 'none'
+                    }}
+                  >
+                    מוצר חדש
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    size="small" 
+                    startIcon={<DownloadIcon />}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    ייצא
+                  </Button>
+                </Box>
+              </Box>
+            )}
+            
+            <Collapse in={!isMobile || expandedSection === 'products'}>
+              {isMobile && (
+                <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: 'auto', pb: 1 }}>
+                  <Button 
+                    variant="contained" 
+                    size="small" 
+                    startIcon={<AddIcon />}
+                    sx={{ 
+                      borderRadius: 2,
+                      boxShadow: 'none',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    מוצר חדש
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    size="small" 
+                    startIcon={<DownloadIcon />}
+                    sx={{ 
+                      borderRadius: 2,
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    ייצא
+                  </Button>
+                </Stack>
+              )}
+              
+              <Tabs
+                value={tabValue}
+                onChange={handleTabChange}
+                variant={isMobile ? "scrollable" : "standard"}
+                scrollButtons={isMobile ? "auto" : false}
+                sx={{
+                  mb: 2,
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: theme.palette.primary.main,
+                  },
+                }}
+              >
+                <Tab label="הכי נמכרים" />
+                <Tab label="חדשים" />
+                <Tab label="במלאי נמוך" />
+              </Tabs>
+              
+              {isMobile ? (
+                <Box>
+                  {mockPopularProducts.map(product => renderMobileProductCard(product))}
+                </Box>
+              ) : (
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>שם המוצר</TableCell>
+                        <TableCell align="right">מחיר</TableCell>
+                        <TableCell align="right">מכירות</TableCell>
+                        <TableCell align="right">מלאי</TableCell>
+                        <TableCell align="right">סטטוס</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {mockPopularProducts.map((product) => (
+                        <TableRow key={product.name} hover>
+                          <TableCell sx={{ fontWeight: 'medium' }}>{product.name}</TableCell>
+                          <TableCell align="right">{product.price}</TableCell>
+                          <TableCell align="right">{product.sales}</TableCell>
+                          <TableCell align="right">{product.stock}</TableCell>
+                          <TableCell align="right" sx={{ width: '15%' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Box sx={{ width: '100%', mr: 1 }}>
+                                <LinearProgress 
+                                  variant="determinate" 
+                                  value={product.progress} 
+                                  sx={{ 
+                                    height: 6,
+                                    borderRadius: 3,
+                                    backgroundColor: `${theme.palette.primary.main}20`,
+                                    '& .MuiLinearProgress-bar': {
+                                      backgroundColor: 
+                                        product.progress > 80 
+                                          ? theme.palette.success.main
+                                          : product.progress > 40
+                                            ? theme.palette.primary.main
+                                            : theme.palette.warning.main
+                                    }
+                                  }}
+                                />
+                              </Box>
+                              <Typography variant="body2" color="text.secondary">
+                                {product.progress}%
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Collapse>
           </Paper>
         </Grid>
       </Grid>

@@ -32,12 +32,12 @@ function About() {
             
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 4 ,direction:"ltr" ,textAlign:"right"}}>
             <LocalFloristIcon color="primary" sx={{ fontSize: 40, mr: 2 }} />
             <Typography
               variant={isMobile ? "h5" : "h4"}
               fontWeight="bold"
-              sx={{ color: theme.palette.text.primary, mr: 2 }}
+              sx={{ color: theme.palette.text.primary, mr: 2,}}
             >
               אודות משתלת הטנא
             </Typography>
@@ -52,6 +52,7 @@ function About() {
               lineHeight: 2,
               color: theme.palette.text.primary,
               fontFamily: "Assistant, sans-serif",
+              
             }}
           >
             משתלת הטנא היא בית אהוב למיני עצים ושתילים אותנטיים של ארץ

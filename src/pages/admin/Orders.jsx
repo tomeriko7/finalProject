@@ -30,7 +30,13 @@ import {
   TextField,
   Alert,
   Snackbar,
-  Tooltip
+  Tooltip,
+  useTheme,
+  useMediaQuery,
+  Stack,
+  Collapse,
+  AppBar,
+  Toolbar
 } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
@@ -40,12 +46,18 @@ import {
   FilterList as FilterListIcon,
   LocalShipping as LocalShippingIcon,
   Payment as PaymentIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { formatDate, formatPrice } from '../../utils/formatters';
 import { getAllOrders, updateOrderStatus, deleteOrder } from '../../services/orderService';
 
 const AdminOrders = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -55,6 +67,7 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [filtersVisible, setFiltersVisible] = useState(!isMobile);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -84,6 +97,11 @@ const AdminOrders = () => {
     };
     fetchOrders();
   }, []);
+  
+  // התאמת מצב הפילטרים לשינויים בגודל המסך
+  useEffect(() => {
+    setFiltersVisible(!isMobile);
+  }, [isMobile]);
 
   const getStatusText = (status) => {
     const statusMap = {
@@ -204,140 +222,255 @@ const AdminOrders = () => {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+  
+  // רינדור כרטיסיות הזמנה למובייל
+  const renderOrderCard = (order) => (
+    <Paper
+      key={order._id}
+      elevation={0}
+      sx={{
+        p: 2,
+        mb: 2,
+        borderRadius: 2,
+        border: `1px solid ${theme.palette.divider}`,
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Box>
+          <Typography variant="subtitle1" fontWeight="bold">
+            {order.orderNumber}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {formatDate(order.createdAt)}
+          </Typography>
+        </Box>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <Select
+            value={order.status}
+            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+            variant="outlined"
+            sx={{ height: 36 }}
+          >
+            <MenuItem value="pending">ממתינה לאישור</MenuItem>
+            <MenuItem value="processing">בטיפול</MenuItem>
+            <MenuItem value="shipped">נשלחה</MenuItem>
+            <MenuItem value="delivered">נמסרה</MenuItem>
+            <MenuItem value="cancelled">בוטלה</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" fontWeight="medium">
+          {order.user.firstName} {order.user.lastName}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {order.user.email}
+        </Typography>
+      </Box>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="body2">
+          {order.items.length} פריטים
+        </Typography>
+        <Typography variant="subtitle2" fontWeight="bold">
+          {formatPrice(order.total)}
+        </Typography>
+      </Box>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Button 
+          variant="outlined" 
+          size="small" 
+          startIcon={<VisibilityIcon />}
+          onClick={() => handleViewOrder(order)}
+          sx={{ borderRadius: 2 }}
+        >
+          פרטים
+        </Button>
+        <IconButton
+          size="small"
+          onClick={() => handleDeleteOrder(order._id)}
+          color="error"
+          sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    </Paper>
+  );
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 'bold' }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2, md: 3 } }}>
+      <Typography variant="h4" component="h1" sx={{ 
+        mb: { xs: 2, md: 4 }, 
+        fontWeight: 'bold',
+        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+      }}>
         ניהול הזמנות
       </Typography>
 
-      {/* פילטרים וחיפוש */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={3} alignItems="center">
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label="חיפוש הזמנה"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>סטטוס</InputLabel>
-              <Select
-                value={statusFilter}
-                label="סטטוס"
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <MenuItem value="all">כל הסטטוסים</MenuItem>
-                <MenuItem value="pending">ממתינה לאישור</MenuItem>
-                <MenuItem value="processing">בטיפול</MenuItem>
-                <MenuItem value="shipped">נשלחה</MenuItem>
-                <MenuItem value="delivered">נמסרה</MenuItem>
-                <MenuItem value="cancelled">בוטלה</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={5}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
-                סה"כ {filteredOrders.length} הזמנות
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </Paper>
+      {/* כפתור פתיחת פילטרים במובייל */}
+      {isMobile && (
+        <Button
+          variant="outlined"
+          startIcon={<FilterListIcon />}
+          endIcon={<KeyboardArrowDownIcon 
+            sx={{ 
+              transform: filtersVisible ? 'rotate(180deg)' : 'none',
+              transition: 'transform 0.3s'
+            }} 
+          />}
+          onClick={() => setFiltersVisible(!filtersVisible)}
+          fullWidth
+          sx={{ mb: 2, borderRadius: 2 }}
+        >
+          {filtersVisible ? 'הסתר פילטרים' : 'הצג פילטרים'}
+        </Button>
+      )}
 
-      {/* טבלת הזמנות */}
-      <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>מספר הזמנה</TableCell>
-                <TableCell>לקוח</TableCell>
-                <TableCell>תאריך</TableCell>
-                <TableCell>פריטים</TableCell>
-                <TableCell>סכום</TableCell>
-                <TableCell>סטטוס</TableCell>
-                <TableCell>פעולות</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedOrders.map((order) => (
-                <TableRow key={order._id} hover>
-                  <TableCell>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {order.orderNumber}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium">
-                        {order.user.firstName} {order.user.lastName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {order.user.email}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {formatDate(order.createdAt)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {order.items.length} פריטים
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
-                      {formatPrice(order.total)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                      <Select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        variant="outlined"
-                      >
-                        <MenuItem value="pending">ממתינה לאישור</MenuItem>
-                        <MenuItem value="processing">בטיפול</MenuItem>
-                        <MenuItem value="shipped">נשלחה</MenuItem>
-                        <MenuItem value="delivered">נמסרה</MenuItem>
-                        <MenuItem value="cancelled">בוטלה</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title="צפייה בפרטים">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleViewOrder(order)}
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="מחיקת הזמנה">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteOrder(order._id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
+      {/* פילטרים וחיפוש */}
+      <Collapse in={filtersVisible}>
+        <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="חיפוש הזמנה"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                }}
+                size={isMobile ? "small" : "medium"}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+                <InputLabel>סטטוס</InputLabel>
+                <Select
+                  value={statusFilter}
+                  label="סטטוס"
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <MenuItem value="all">כל הסטטוסים</MenuItem>
+                  <MenuItem value="pending">ממתינה לאישור</MenuItem>
+                  <MenuItem value="processing">בטיפול</MenuItem>
+                  <MenuItem value="shipped">נשלחה</MenuItem>
+                  <MenuItem value="delivered">נמסרה</MenuItem>
+                  <MenuItem value="cancelled">בוטלה</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={5}>
+              <Box sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, gap: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
+                  סה"כ {filteredOrders.length} הזמנות
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Collapse>
+
+      {/* טבלת הזמנות למסכים גדולים / כרטיסיות למובייל */}
+      <Paper sx={{ borderRadius: 2 }}>
+        {isMobile ? (
+          <Box sx={{ p: 2 }}>
+            {paginatedOrders.length > 0 ? (
+              paginatedOrders.map(order => renderOrderCard(order))
+            ) : (
+              <Typography align="center" color="text.secondary" sx={{ py: 3 }}>
+                לא נמצאו הזמנות
+              </Typography>
+            )}
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>מספר הזמנה</TableCell>
+                  <TableCell>לקוח</TableCell>
+                  <TableCell>תאריך</TableCell>
+                  <TableCell>פריטים</TableCell>
+                  <TableCell>סכום</TableCell>
+                  <TableCell>סטטוס</TableCell>
+                  <TableCell>פעולות</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {paginatedOrders.map((order) => (
+                  <TableRow key={order._id} hover>
+                    <TableCell>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {order.orderNumber}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="body2" fontWeight="medium">
+                          {order.user.firstName} {order.user.lastName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {order.user.email}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {formatDate(order.createdAt)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {order.items.length} פריטים
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="bold">
+                        {formatPrice(order.total)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <Select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          variant="outlined"
+                        >
+                          <MenuItem value="pending">ממתינה לאישור</MenuItem>
+                          <MenuItem value="processing">בטיפול</MenuItem>
+                          <MenuItem value="shipped">נשלחה</MenuItem>
+                          <MenuItem value="delivered">נמסרה</MenuItem>
+                          <MenuItem value="cancelled">בוטלה</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="צפייה בפרטים">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleViewOrder(order)}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="מחיקת הזמנה">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteOrder(order._id)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
         
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
@@ -347,31 +480,56 @@ const AdminOrders = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="שורות בעמוד:"
+          labelRowsPerPage={isMobile ? "" : "שורות בעמוד:"}
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} מתוך ${count}`}
         />
       </Paper>
 
-      {/* דיאלוג פרטי הזמנה */}
+      {/* דיאלוג פרטי הזמנה - מסך מלא במובייל */}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            borderRadius: isMobile ? 0 : 2,
+          }
+        }}
       >
-        <DialogTitle>
-          פרטי הזמנה {selectedOrder?.orderNumber}
-        </DialogTitle>
-        <DialogContent>
+        {isMobile ? (
+          <AppBar position="sticky" color="primary" sx={{ mb: 2 }}>
+            <Toolbar>
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={handleCloseDialog}
+                aria-label="close"
+              >
+                <CloseIcon />
+              </IconButton>
+              <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+                פרטי הזמנה {selectedOrder?.orderNumber}
+              </Typography>
+            </Toolbar>
+          </AppBar>
+        ) : (
+          <DialogTitle>
+            פרטי הזמנה {selectedOrder?.orderNumber}
+          </DialogTitle>
+        )}
+
+        <DialogContent sx={{ p: isMobile ? 2 : 3 }}>
           {selectedOrder && (
-            <Grid container spacing={3}>
+            <Grid container spacing={isMobile ? 2 : 3}>
               {/* פרטי לקוח */}
               <Grid item xs={12} md={6}>
                 <Card variant="outlined">
-                  <CardContent>
+                  <CardContent sx={{ p: isMobile ? 2 : 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      <Typography variant="h6">פרטי לקוח</Typography>
+                      <Typography variant="h6" sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>פרטי לקוח</Typography>
                     </Box>
                     <Typography variant="body2" gutterBottom>
                       <strong>שם:</strong> {selectedOrder.contactInfo.firstName} {selectedOrder.contactInfo.lastName}
@@ -389,10 +547,10 @@ const AdminOrders = () => {
               {/* כתובת משלוח */}
               <Grid item xs={12} md={6}>
                 <Card variant="outlined">
-                  <CardContent>
+                  <CardContent sx={{ p: isMobile ? 2 : 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <LocalShippingIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      <Typography variant="h6">כתובת משלוח</Typography>
+                      <Typography variant="h6" sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>כתובת משלוח</Typography>
                     </Box>
                     <Typography variant="body2" gutterBottom>
                       {selectedOrder.shipping.address}
@@ -407,10 +565,10 @@ const AdminOrders = () => {
               {/* פרטי תשלום */}
               <Grid item xs={12}>
                 <Card variant="outlined">
-                  <CardContent>
+                  <CardContent sx={{ p: isMobile ? 2 : 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <PaymentIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      <Typography variant="h6">פרטי תשלום</Typography>
+                      <Typography variant="h6" sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>פרטי תשלום</Typography>
                     </Box>
                     <Typography variant="body2" gutterBottom>
                       <strong>אמצעי תשלום:</strong> {selectedOrder.payment.method === 'credit' ? 'כרטיס אשראי' : 'PayPal'}
@@ -426,16 +584,16 @@ const AdminOrders = () => {
 
               {/* פריטים */}
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
                   פריטים בהזמנה
                 </Typography>
-                <Paper variant="outlined" sx={{ p: 2 }}>
+                <Paper variant="outlined" sx={{ p: isMobile ? 2 : 3 }}>
                   {selectedOrder.items.map((item) => (
                     <Box key={item._id} sx={{ display: 'flex', mb: 2, alignItems: 'center' }}>
                       <Avatar 
                         src={item.imageUrl} 
                         variant="rounded" 
-                        sx={{ width: 60, height: 60, mr: 2 }}
+                        sx={{ width: isMobile ? 50 : 60, height: isMobile ? 50 : 60, mr: 2 }}
                       />
                       <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="subtitle2">{item.name}</Typography>
@@ -483,9 +641,25 @@ const AdminOrders = () => {
             </Grid>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>סגור</Button>
-        </DialogActions>
+        
+        {!isMobile && (
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>סגור</Button>
+          </DialogActions>
+        )}
+        
+        {isMobile && (
+          <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+            <Button 
+              onClick={handleCloseDialog} 
+              variant="contained" 
+              fullWidth
+              sx={{ borderRadius: 2 }}
+            >
+              סגור
+            </Button>
+          </Box>
+        )}
       </Dialog>
 
       {/* הודעות */}

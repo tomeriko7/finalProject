@@ -22,6 +22,20 @@ import {
   CircularProgress,
   Snackbar,
   IconButton,
+  useMediaQuery,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  Divider,
+  InputAdornment,
+  AppBar,
+  Toolbar,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -32,6 +46,8 @@ import {
   Clear as ClearIcon,
   Link as LinkIcon,
   Save as SaveIcon,
+  FilterList as FilterListIcon,
+  Close as CloseIcon
 } from "@mui/icons-material";
 import {
   uploadProductImage,
@@ -46,6 +62,9 @@ const categories = ["צמחי תבלין", "עצים", "שתילים", "כלי �
 
 const Products = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
@@ -251,25 +270,101 @@ const Products = () => {
       setLoading(false);
     }
   };
+  
+  // רינדור כרטיסיית מוצר למובייל
+  const renderProductCard = (product) => (
+    <Card
+      key={product._id}
+      elevation={0}
+      sx={{
+        borderRadius: 2,
+        border: `1px solid ${theme.palette.divider}`,
+        overflow: 'hidden',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <Box sx={{ position: 'relative' }}>
+        <CardMedia
+          component="img"
+          height="140"
+          image={product.imageUrl || 'https://placehold.co/400x200/e0e0e0/cccccc?text=אין+תמונה'}
+          alt={product.name}
+        />
+        <Chip
+          label={product.isActive ? "פעיל" : "לא פעיל"}
+          color={product.isActive ? "success" : "default"}
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+          }}
+        />
+      </Box>
+      
+      <CardContent sx={{ flexGrow: 1, p: 2 }}>
+        <Typography variant="subtitle1" component="div" fontWeight="bold" gutterBottom noWrap>
+          {product.name}
+        </Typography>
+        
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          {product.category}
+        </Typography>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+          <Typography variant="body2">
+            במלאי: {product.stockQuantity}
+          </Typography>
+          {displayPrice(product.price, product.discount)}
+        </Box>
+      </CardContent>
+      
+      <Divider />
+      
+      <CardActions sx={{ p: 1, justifyContent: 'space-between' }}>
+        <Button
+          size="small"
+          startIcon={<EditIcon />}
+          onClick={() => handleEditClick(product)}
+        >
+          ערוך
+        </Button>
+        <IconButton
+          size="small"
+          color="error"
+          onClick={() => handleDeleteProduct(product._id)}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </CardActions>
+    </Card>
+  );
 
   return (
-    <Box>
+    <Box sx={{ p: { xs: 1, sm: 2 } }}>
       {/* כותרת וכפתור הוספה */}
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'stretch', sm: 'center' },
+          gap: 2,
           mb: 3,
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+        <Typography variant="h5" sx={{ 
+          fontWeight: "bold",
+          fontSize: { xs: '1.5rem', sm: '1.75rem' }
+        }}>
           ניהול מוצרים
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          sx={{ borderRadius: 2 }}
+          sx={{ borderRadius: 2, alignSelf: { xs: 'stretch', sm: 'auto' } }}
           onClick={() => {
             setCurrentProduct({
               name: "",
@@ -285,6 +380,7 @@ const Products = () => {
             setOpenDialog(true);
           }}
           disabled={loading}
+          fullWidth={isMobile}
         >
           מוצר חדש
         </Button>
@@ -294,7 +390,7 @@ const Products = () => {
       <Paper
         elevation={0}
         sx={{
-          p: 3,
+          p: { xs: 2, sm: 3 },
           borderRadius: 2,
           mb: 3,
           border: `1px solid ${theme.palette.divider}`,
@@ -303,71 +399,51 @@ const Products = () => {
         {/* סרגל חיפוש וסינון */}
         <Box
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: 2,
             mb: 2,
           }}
         >
-          <input
-            type="search"
+          <TextField
             placeholder="חיפוש מוצרים..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: "300px",
-              height: "40px",
-              padding: "0 16px",
-              fontSize: "16px",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-              outline: "none",
-              fontFamily: "inherit",
-              direction: "rtl",
-              backgroundColor: "white",
-              cursor: "text",
-              transition: "border-color 0.2s, box-shadow 0.2s",
+            size={isMobile ? "small" : "medium"}
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              )
             }}
+            sx={{ flex: 1 }}
             disabled={loading}
           />
 
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <select
+          <FormControl 
+            variant="outlined" 
+            size={isMobile ? "small" : "medium"}
+            sx={{ minWidth: { xs: '100%', sm: 150 } }}
+          >
+            <InputLabel>קטגוריה</InputLabel>
+            <Select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              style={{
-                width: "150px",
-                height: "40px",
-                padding: "0 16px",
-                fontSize: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                outline: "none",
-                fontFamily: "inherit",
-                direction: "rtl",
-                backgroundColor: "white",
-                cursor: "pointer",
-                transition: "border-color 0.2s, box-shadow 0.2s",
-              }}
+              label="קטגוריה"
               disabled={loading}
             >
-              <option value="הכל">הכל</option>
+              <MenuItem value="הכל">הכל</MenuItem>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
+                <MenuItem key={cat} value={cat}>
                   {cat}
-                </option>
+                </MenuItem>
               ))}
-            </select>
-
-            <Button
-              variant="outlined"
-              startIcon={<SearchIcon />}
-              size="small"
-              disabled={loading}
-            >
-              חיפוש
-            </Button>
-          </Box>
+            </Select>
+          </FormControl>
         </Box>
 
         {/* Loading indicator */}
@@ -377,84 +453,94 @@ const Products = () => {
           </Box>
         )}
 
-        {/* הטבלה */}
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell align="right">תמונה</TableCell>
-                <TableCell align="right">שם</TableCell>
-                <TableCell align="right">קטגוריה</TableCell>
-                <TableCell align="right">מחיר</TableCell>
-                <TableCell align="right">במלאי</TableCell>
-                <TableCell align="right">סטטוס</TableCell>
-                <TableCell align="right">פעולות</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {products
-                .slice(0, rowsPerPage)
-                .map((product) => (
-                  <TableRow key={product._id}>
-                    <TableCell align="right">
-                      {product.imageUrl ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          style={{ width: 50, height: 50, objectFit: "cover" }}
+        {/* הטבלה או תצוגת כרטיסיות */}
+        {isMobile ? (
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            {products.slice(0, rowsPerPage).map((product) => (
+              <Grid item xs={12} sm={6} md={4} key={product._id}>
+                {renderProductCard(product)}
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell align="right">תמונה</TableCell>
+                  <TableCell align="right">שם</TableCell>
+                  <TableCell align="right">קטגוריה</TableCell>
+                  <TableCell align="right">מחיר</TableCell>
+                  <TableCell align="right">במלאי</TableCell>
+                  <TableCell align="right">סטטוס</TableCell>
+                  <TableCell align="right">פעולות</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {products
+                  .slice(0, rowsPerPage)
+                  .map((product) => (
+                    <TableRow key={product._id}>
+                      <TableCell align="right">
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            style={{ width: 50, height: 50, objectFit: "cover" }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 50,
+                              height: 50,
+                              backgroundColor: "#f0f0f0",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                            }}
+                          >
+                            אין תמונה
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">{product.name}</TableCell>
+                      <TableCell align="right">{product.category}</TableCell>
+                      <TableCell align="right">
+                        {displayPrice(product.price, product.discount)}
+                      </TableCell>
+                      <TableCell align="right">{product.stockQuantity}</TableCell>
+                      <TableCell align="right">
+                        <Chip
+                          label={product.isActive ? "פעיל" : "לא פעיל"}
+                          color={product.isActive ? "success" : "default"}
+                          size="small"
                         />
-                      ) : (
-                        <div
-                          style={{
-                            width: 50,
-                            height: 50,
-                            backgroundColor: "#f0f0f0",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "12px",
-                          }}
-                        >
-                          אין תמונה
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell align="right">{product.name}</TableCell>
-                    <TableCell align="right">{product.category}</TableCell>
-                    <TableCell align="right">
-                      {displayPrice(product.price, product.discount)}
-                    </TableCell>
-                    <TableCell align="right">{product.stockQuantity}</TableCell>
-                    <TableCell align="right">
-                      <Chip
-                        label={product.isActive ? "פעיל" : "לא פעיל"}
-                        color={product.isActive ? "success" : "default"}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleEditClick(product)}
-                          size="small"
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteProduct(product._id)}
-                          size="small"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <IconButton
+                            color="primary"
+                            onClick={() => handleEditClick(product)}
+                            size="small"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDeleteProduct(product._id)}
+                            size="small"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         <TablePagination
           component="div"
@@ -463,7 +549,7 @@ const Products = () => {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="שורות בעמוד:"
+          labelRowsPerPage={isMobile ? "" : "שורות בעמוד:"}
           disabled={loading}
         />
       </Paper>
@@ -474,38 +560,64 @@ const Products = () => {
         onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobile}
         PaperProps={{
           sx: {
-            borderRadius: 4,
+            borderRadius: isMobile ? 0 : 4,
             direction: "rtl",
-            minHeight: "80vh",
-            maxHeight: "90vh",
+            minHeight: isMobile ? "100%" : "80vh",
+            maxHeight: isMobile ? "100%" : "90vh",
             display: "flex",
             flexDirection: "column",
           },
         }}
       >
         {/* כותרת */}
-        <DialogTitle sx={{ textAlign: "right" }}>
-          {currentProduct?._id ? "עריכת מוצר" : "הוספת מוצר חדש"}
-        </DialogTitle>
+        {isMobile ? (
+          <AppBar position="sticky" sx={{ mb: 2 }}>
+            <Toolbar>
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={handleCloseDialog}
+                aria-label="close"
+              >
+                <CloseIcon />
+              </IconButton>
+              <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+                {currentProduct?._id ? "עריכת מוצר" : "הוספת מוצר חדש"}
+              </Typography>
+              <Button 
+                color="inherit" 
+                onClick={handleSaveProduct}
+                disabled={loading}
+              >
+                {loading ? "שומר..." : "שמור"}
+              </Button>
+            </Toolbar>
+          </AppBar>
+        ) : (
+          <DialogTitle sx={{ textAlign: "right", p: 3 }}>
+            {currentProduct?._id ? "עריכת מוצר" : "הוספת מוצר חדש"}
+          </DialogTitle>
+        )}
 
         <DialogContent
           sx={{
-            p: 0,
+            p: { xs: 2, sm: 3 },
             backgroundColor: "white",
             flex: 1,
             overflowY: "auto",
           }}
         >
           {error && (
-            <Alert severity="error" sx={{ m: 3, mt: 2 }}>
+            <Alert severity="error" sx={{ m: 1, mt: 0, mb: 2 }}>
               {error}
             </Alert>
           )}
 
-          <Box sx={{ p: 2, direction: "rtl" }}>
-            <Grid container spacing={3}>
+          <Box sx={{ direction: "rtl" }}>
+            <Grid container spacing={isMobile ? 2 : 3}>
               {/* תמונת מוצר */}
               <Grid item xs={12}>
                 <Typography
@@ -519,7 +631,7 @@ const Products = () => {
                   sx={{
                     display: "flex",
                     flexDirection: { xs: "column", sm: "row" },
-                    gap: 3,
+                    gap: { xs: 2, sm: 3 },
                     mb: 3,
                   }}
                 >
@@ -529,7 +641,7 @@ const Products = () => {
                     htmlFor="product-image-upload"
                     sx={{
                       width: { xs: "100%", sm: 200 },
-                      height: 200,
+                      height: { xs: 180, sm: 200 },
                       borderRadius: 2,
                       border: `2px dashed ${theme.palette.divider}`,
                       display: "flex",
@@ -579,7 +691,14 @@ const Products = () => {
                           <PhotoCameraIcon fontSize="large" />
                         </Box>
                       </>
-                    ) : null}
+                    ) : (
+                      <Box sx={{ textAlign: 'center', p: 2 }}>
+                        <PhotoCameraIcon fontSize="large" sx={{ opacity: 0.5, mb: 1 }} />
+                        <Typography variant="body2" color="text.secondary">
+                          לחץ להעלאת תמונה
+                        </Typography>
+                      </Box>
+                    )}
                     <input
                       id="product-image-upload"
                       type="file"
@@ -592,8 +711,9 @@ const Products = () => {
 
                   {/* שדה URL */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <input
-                      type="text"
+                    <TextField
+                      fullWidth
+                      label="קישור לתמונה"
                       value={currentProduct?.imageUrl || ""}
                       onChange={(e) =>
                         setCurrentProduct({
@@ -602,27 +722,20 @@ const Products = () => {
                         })
                       }
                       disabled={loading}
-                      style={{
-                        width: "100%",
-                        height: "56px",
-                        padding: "0 16px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "8px",
-                        outline: "none",
-                        fontFamily: "inherit",
-                        direction: "rtl",
-                        backgroundColor: loading ? "#f5f5f5" : "white",
-                        cursor: loading ? "not-allowed" : "text",
-                        transition: "border-color 0.2s, box-shadow 0.2s",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#ccc";
-                        e.target.style.boxShadow = "none";
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
+                      InputProps={{
+                        endAdornment: currentProduct?.imageUrl && (
+                          <InputAdornment position="end">
+                            <IconButton 
+                              onClick={() => setCurrentProduct({...currentProduct, imageUrl: ""})}
+                              edge="end"
+                              size="small"
+                            >
+                              <ClearIcon fontSize="small" />
+                            </IconButton>
+                          </InputAdornment>
+                        )
                       }}
                     />
                     <Box
@@ -652,36 +765,20 @@ const Products = () => {
               </Grid>
 
               {/* פרטי מוצר */}
-              <div style={{ width: "100%" }}>
-                <h3
-                  style={{
-                    marginBottom: "32px",
-                    fontWeight: 600,
-                    color: "#333",
-                    fontSize: "18px",
-                    fontFamily: "inherit",
-                  }}
+              <Grid item xs={12}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}
                 >
                   פרטי מוצר
-                </h3>
+                </Typography>
 
-                <div style={{ display: "grid", gap: "32px" }}>
+                <Grid container spacing={2}>
                   {/* שם המוצר */}
-                  <div style={{ width: "100%" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontSize: "16px",
-                        fontWeight: "500",
-                        color: "#333",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      שם המוצר *
-                    </label>
-                    <input
-                      type="text"
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="שם המוצר *"
                       value={currentProduct?.name || ""}
                       onChange={(e) =>
                         setCurrentProduct({
@@ -690,264 +787,105 @@ const Products = () => {
                         })
                       }
                       disabled={loading}
-                      style={{
-                        width: "100%",
-                        height: "64px",
-                        padding: "0 16px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "8px",
-                        outline: "none",
-                        fontFamily: "inherit",
-                        direction: "rtl",
-                        backgroundColor: loading ? "#f5f5f5" : "white",
-                        cursor: loading ? "not-allowed" : "text",
-                        transition: "border-color 0.2s, box-shadow 0.2s",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#ccc";
-                        e.target.style.boxShadow = "none";
-                      }}
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
+                      required
                     />
-                  </div>
+                  </Grid>
 
                   {/* קטגוריה */}
-                  <div style={{ width: "100%" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontSize: "16px",
-                        fontWeight: "500",
-                        color: "#333",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      קטגוריה *
-                    </label>
-                    <select
-                      value={currentProduct?.category || ""}
+                  <Grid item xs={12}>
+                    <FormControl fullWidth variant="outlined" size={isMobile ? "small" : "medium"}>
+                      <InputLabel>קטגוריה *</InputLabel>
+                      <Select
+                        value={currentProduct?.category || ""}
+                        onChange={(e) =>
+                          setCurrentProduct({
+                            ...currentProduct,
+                            category: e.target.value,
+                          })
+                        }
+                        label="קטגוריה *"
+                        disabled={loading}
+                        required
+                      >
+                        <MenuItem value="">בחר קטגוריה...</MenuItem>
+                        {categories.map((cat) => (
+                          <MenuItem key={cat} value={cat}>
+                            {cat}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* מחיר וכמות */}
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="מחיר (₪) *"
+                      type="number"
+                      value={currentProduct?.price || ""}
                       onChange={(e) =>
                         setCurrentProduct({
                           ...currentProduct,
-                          category: e.target.value,
+                          price: parseFloat(e.target.value) || 0,
                         })
                       }
                       disabled={loading}
-                      style={{
-                        width: "100%",
-                        height: "64px",
-                        padding: "0 16px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "8px",
-                        outline: "none",
-                        fontFamily: "inherit",
-                        direction: "rtl",
-                        backgroundColor: loading ? "#f5f5f5" : "white",
-                        cursor: loading ? "not-allowed" : "pointer",
-                        transition: "border-color 0.2s, box-shadow 0.2s",
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
+                      required
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">₪</InputAdornment>,
                       }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#ccc";
-                        e.target.style.boxShadow = "none";
-                      }}
-                    >
-                      <option value="">בחר קטגוריה...</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    />
+                  </Grid>
 
-                  {/* מחיר וכמות */}
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "24px",
-                    }}
-                  >
-                    <div>
-                      <label
-                        style={{
-                          display: "block",
-                          marginBottom: "8px",
-                          fontSize: "16px",
-                          fontWeight: "500",
-                          color: "#333",
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        מחיר (₪) *
-                      </label>
-                      <input
-                        type="number"
-                        value={currentProduct?.price || ""}
-                        onChange={(e) =>
-                          setCurrentProduct({
-                            ...currentProduct,
-                            price: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        disabled={loading}
-                        style={{
-                          width: "100%",
-                          height: "64px",
-                          padding: "0 16px",
-                          fontSize: "16px",
-                          border: "1px solid #ccc",
-                          borderRadius: "8px",
-                          outline: "none",
-                          fontFamily: "inherit",
-                          direction: "rtl",
-                          backgroundColor: loading ? "#f5f5f5" : "white",
-                          cursor: loading ? "not-allowed" : "text",
-                          transition: "border-color 0.2s, box-shadow 0.2s",
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor =
-                            theme.palette.primary.main;
-                          e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = "#ccc";
-                          e.target.style.boxShadow = "none";
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        style={{
-                          display: "block",
-                          marginBottom: "8px",
-                          fontSize: "16px",
-                          fontWeight: "500",
-                          color: "#333",
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        כמות במלאי
-                      </label>
-                      <input
-                        type="number"
-                        value={currentProduct?.stockQuantity || ""}
-                        onChange={(e) =>
-                          setCurrentProduct({
-                            ...currentProduct,
-                            stockQuantity: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        disabled={loading}
-                        style={{
-                          width: "100%",
-                          height: "64px",
-                          padding: "0 16px",
-                          fontSize: "16px",
-                          border: "1px solid #ccc",
-                          borderRadius: "8px",
-                          outline: "none",
-                          fontFamily: "inherit",
-                          direction: "rtl",
-                          backgroundColor: loading ? "#f5f5f5" : "white",
-                          cursor: loading ? "not-allowed" : "text",
-                          transition: "border-color 0.2s, box-shadow 0.2s",
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor =
-                            theme.palette.primary.main;
-                          e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = "#ccc";
-                          e.target.style.boxShadow = "none";
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="כמות במלאי"
+                      type="number"
+                      value={currentProduct?.stockQuantity || ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          stockQuantity: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      disabled={loading}
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
+                    />
+                  </Grid>
 
                   {/* הנחה וסטטוס */}
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "24px",
-                    }}
-                  >
-                    <div>
-                      <label
-                        style={{
-                          display: "block",
-                          marginBottom: "8px",
-                          fontSize: "16px",
-                          fontWeight: "500",
-                          color: "#333",
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        הנחה (%)
-                      </label>
-                      <input
-                        type="number"
-                        value={currentProduct?.discount || ""}
-                        onChange={(e) =>
-                          setCurrentProduct({
-                            ...currentProduct,
-                            discount: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        disabled={loading}
-                        style={{
-                          width: "100%",
-                          height: "64px",
-                          padding: "0 16px",
-                          fontSize: "16px",
-                          border: "1px solid #ccc",
-                          borderRadius: "8px",
-                          outline: "none",
-                          fontFamily: "inherit",
-                          direction: "rtl",
-                          backgroundColor: loading ? "#f5f5f5" : "white",
-                          cursor: loading ? "not-allowed" : "text",
-                          transition: "border-color 0.2s, box-shadow 0.2s",
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor =
-                            theme.palette.primary.main;
-                          e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = "#ccc";
-                          e.target.style.boxShadow = "none";
-                        }}
-                      />
-                    </div>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="הנחה (%)"
+                      type="number"
+                      value={currentProduct?.discount || ""}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          discount: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      disabled={loading}
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                      }}
+                    />
+                  </Grid>
 
-                    <div>
-                      <label
-                        style={{
-                          display: "block",
-                          marginBottom: "8px",
-                          fontSize: "16px",
-                          fontWeight: "500",
-                          color: "#333",
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        סטטוס המוצר
-                      </label>
-                      <select
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth variant="outlined" size={isMobile ? "small" : "medium"}>
+                      <InputLabel>סטטוס המוצר</InputLabel>
+                      <Select
                         value={
                           currentProduct?.isActive !== undefined
                             ? currentProduct.isActive
@@ -959,52 +897,22 @@ const Products = () => {
                             isActive: e.target.value === "true",
                           })
                         }
+                        label="סטטוס המוצר"
                         disabled={loading}
-                        style={{
-                          width: "100%",
-                          height: "64px",
-                          padding: "0 16px",
-                          fontSize: "16px",
-                          border: "1px solid #ccc",
-                          borderRadius: "8px",
-                          outline: "none",
-                          fontFamily: "inherit",
-                          direction: "rtl",
-                          backgroundColor: loading ? "#f5f5f5" : "white",
-                          cursor: loading ? "not-allowed" : "pointer",
-                          transition: "border-color 0.2s, box-shadow 0.2s",
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor =
-                            theme.palette.primary.main;
-                          e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = "#ccc";
-                          e.target.style.boxShadow = "none";
-                        }}
                       >
-                        <option value={true}>🟢 פעיל</option>
-                        <option value={false}>🔴 לא פעיל</option>
-                      </select>
-                    </div>
-                  </div>
+                        <MenuItem value={"true"}>🟢 פעיל</MenuItem>
+                        <MenuItem value={"false"}>🔴 לא פעיל</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
 
                   {/* תיאור */}
-                  <div style={{ width: "100%" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontSize: "16px",
-                        fontWeight: "500",
-                        color: "#333",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      תיאור המוצר *
-                    </label>
-                    <textarea
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="תיאור המוצר *"
+                      multiline
+                      rows={4}
                       value={currentProduct?.description || ""}
                       onChange={(e) =>
                         setCurrentProduct({
@@ -1013,50 +921,18 @@ const Products = () => {
                         })
                       }
                       disabled={loading}
-                      rows={4}
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
                       placeholder="הזן תיאור מפורט של המוצר..."
-                      style={{
-                        width: "100%",
-                        padding: "16px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "8px",
-                        outline: "none",
-                        fontFamily: "inherit",
-                        direction: "rtl",
-                        backgroundColor: loading ? "#f5f5f5" : "white",
-                        cursor: loading ? "not-allowed" : "text",
-                        transition: "border-color 0.2s, box-shadow 0.2s",
-                        resize: "vertical",
-                        minHeight: "120px",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#ccc";
-                        e.target.style.boxShadow = "none";
-                      }}
+                      required
                     />
-                  </div>
+                  </Grid>
 
                   {/* תגיות */}
-                  <div style={{ width: "100%" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontSize: "16px",
-                        fontWeight: "500",
-                        color: "#333",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      תגיות (מופרדות בפסיקים)
-                    </label>
-                    <input
-                      type="text"
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="תגיות (מופרדות בפסיקים)"
                       value={currentProduct?.tags?.join(", ") || ""}
                       onChange={(e) =>
                         setCurrentProduct({
@@ -1074,107 +950,80 @@ const Products = () => {
                             .map((tag) => tag.trim())
                             .filter((tag) => tag !== ""),
                         });
-                        e.target.style.borderColor = "#ccc";
-                        e.target.style.boxShadow = "none";
                       }}
                       disabled={loading}
                       placeholder="לדוגמה: אופנה, חורף, מבצע"
-                      style={{
-                        width: "100%",
-                        height: "64px",
-                        padding: "0 16px",
-                        fontSize: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "8px",
-                        outline: "none",
-                        fontFamily: "inherit",
-                        direction: "rtl",
-                        backgroundColor: loading ? "#f5f5f5" : "white",
-                        cursor: loading ? "not-allowed" : "text",
-                        transition: "border-color 0.2s, box-shadow 0.2s",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
-                      }}
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
                     />
-
+                    
                     {/* הצגת תגיות */}
                     {currentProduct?.tags && currentProduct.tags.length > 0 && (
-                      <div
-                        style={{
-                          marginTop: "16px",
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "8px",
-                        }}
-                      >
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
                         {currentProduct.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            style={{
-                              padding: "6px 12px",
-                              backgroundColor: "#e3f2fd",
-                              color: "#1976d2",
-                              border: "1px solid #1976d2",
-                              borderRadius: "16px",
-                              fontSize: "14px",
-                              fontWeight: "500",
-                            }}
-                          >
-                            {tag}
-                          </span>
+                          tag && (
+                            <Chip
+                              key={index}
+                              label={tag}
+                              color="primary"
+                              variant="outlined"
+                              size="small"
+                              sx={{ borderRadius: 1 }}
+                            />
+                          )
                         ))}
-                      </div>
+                      </Box>
                     )}
-                  </div>
-                </div>
-              </div>
+                  </Grid>
+                </Grid>
+              </Grid>
             </Grid>
           </Box>
         </DialogContent>
 
-        {/* כפתורים */}
-        <DialogActions
-          sx={{
-            p: 2,
-            borderTop: `1px solid ${theme.palette.divider}`,
-            backgroundColor: "background.paper",
-            position: "sticky",
-            bottom: 0,
-            zIndex: 1,
-            flexDirection: 'row-reverse',
-            justifyContent: 'start'
-          }}
-        >
-          <Button
-            onClick={handleCloseDialog}
-            variant="outlined"
-            disabled={loading}
-            sx={{ minWidth: 120 }}
+        {/* כפתורים - רק במסך רחב, במובייל הכפתורים בAppBar */}
+        {!isMobile && (
+          <DialogActions
+            sx={{
+              p: 3,
+              borderTop: `1px solid ${theme.palette.divider}`,
+              backgroundColor: "background.paper",
+              position: "sticky",
+              bottom: 0,
+              zIndex: 1,
+              flexDirection: 'row-reverse',
+              justifyContent: 'start'
+            }}
           >
-            ביטול
-          </Button>
-          <Button
-            onClick={handleSaveProduct}
-            variant="contained"
-            startIcon={
-              loading ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                <SaveIcon />
-              )
-            }
-            disabled={loading}
-            sx={{ minWidth: 140 }}
-          >
-            {loading
-              ? "שומר..."
-              : currentProduct?._id
-              ? "שמור שינויים"
-              : "הוסף מוצר"}
-          </Button>
-        </DialogActions>
+            <Button
+              onClick={handleCloseDialog}
+              variant="outlined"
+              disabled={loading}
+              sx={{ minWidth: 120 }}
+            >
+              ביטול
+            </Button>
+            <Button
+              onClick={handleSaveProduct}
+              variant="contained"
+              startIcon={
+                loading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <SaveIcon />
+                )
+              }
+              disabled={loading}
+              sx={{ minWidth: 140, mr: 1 }}
+            >
+              {loading
+                ? "שומר..."
+                : currentProduct?._id
+                ? "שמור שינויים"
+                : "הוסף מוצר"}
+            </Button>
+          </DialogActions>
+        )}
       </Dialog>
 
       {/* Snackbar for success/error messages */}

@@ -13,7 +13,13 @@ import {
   Tooltip,
   Snackbar,
   Alert,
-  Badge,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   ShoppingCart as ShoppingCartIcon,
@@ -22,18 +28,31 @@ import {
   Visibility as VisibilityIcon,
   LocalOffer as LocalOfferIcon,
 } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice";
+import { toggleFavorite } from "../../store/slices/favoritesSlice";
 import { formatPrice } from "../../utils/formatters";
 
 const ProductCard = ({ product, viewMode = "grid" }) => {
   const dispatch = useDispatch();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const [openDialog, setOpenDialog] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+
+  const handleOpenDialog = () => setOpenDialog(true);
+  const handleCloseDialog = () => setOpenDialog(false);
+  
+  // בדיקה האם המוצר נמצא במועדפים
+  const favorites = useSelector((state) => state.favorites.favorites);
+  const productId = product.id || product._id;
+  const isFavorite = favorites.some(item => 
+    (item.id === productId) || (item._id === productId)
+  );
 
   const handleAddToCart = () => {
     if (product.stockQuantity <= 0) {
@@ -54,7 +73,8 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
   };
 
   const handleToggleFavorite = () => {
-    setIsFavorite(!isFavorite);
+    dispatch(toggleFavorite({ product }));
+    
     setSnackbar({
       open: true,
       message: isFavorite ? "הוסר מהמועדפים" : "נוסף למועדפים",
@@ -64,15 +84,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
 
   const isOutOfStock = product.stockQuantity <= 0;
 
-  // Debug - בואו נראה מה יש במוצר
-  console.log("Product data:", {
-    name: product.name,
-    price: product.price,
-    discount: product.discount,
-    discountType: typeof product.discount,
-  });
-
-  // תיקון משופר: בדיקה נכונה להנחה
+  // תיקון בדיקת ההנחה
   const hasDiscount =
     product.discount != null &&
     product.discount !== undefined &&
@@ -86,8 +98,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
     ? product.price / (1 - product.discount / 100)
     : null;
 
-  console.log("Calculated values:", { hasDiscount, originalPrice });
-
+  // רנדור מצב רשימה
   if (viewMode === "list") {
     return (
       <>
@@ -98,7 +109,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             minHeight: 250,
             height: "auto",
             transition: "all 0.3s ease",
-            direction: "rtl", // הוספת RTL
+            direction: "rtl",
             "&:hover": {
               boxShadow: 4,
               transform: "translateY(-2px)",
@@ -134,8 +145,6 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
 
             {/* Badges */}
             <Box sx={{ position: "absolute", top: 8, right: 8 }}>
-              {" "}
-              {/* שונה מ-left ל-right */}
               {hasDiscount && (
                 <Chip
                   label={`-${product.discount}%`}
@@ -199,7 +208,6 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                 <Rating value={product.rating || 0} readOnly size="small" />
               </Box>
 
-              {/* תיקון: הצגת המחיר רק אם יש הנחה ממשית */}
               <Box
                 sx={{
                   display: "flex",
@@ -240,7 +248,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
 
               <Box>
                 <Tooltip title="צפה במוצר">
-                  <IconButton color="primary">
+                  <IconButton color="primary" onClick={handleOpenDialog}>
                     <VisibilityIcon />
                   </IconButton>
                 </Tooltip>
@@ -254,10 +262,129 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
           </Box>
         </Card>
 
+        {/* דיאלוג מפורט למוצר */}
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          fullScreen={fullScreen}
+          maxWidth="md"
+          fullWidth
+          aria-labelledby="product-dialog-title"
+          sx={{
+            '& .MuiDialog-paper': {
+              direction: 'rtl',
+            },
+          }}
+        >
+          <DialogTitle id="product-dialog-title" sx={{ textAlign: 'center', pb: 1 }}>
+            {product.name}
+          </DialogTitle>
+          <Divider />
+          <DialogContent>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+              {/* תמונת המוצר */}
+              <Box sx={{ flex: 1, maxWidth: { md: '50%' }, display: 'flex', justifyContent: 'center' }}>
+                <Box
+                  sx={{
+                    width: '100%',
+                    maxWidth: 400,
+                    height: 400,
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    boxShadow: 2,
+                  }}
+                >
+                  <img
+                    src={product.imageUrl || product.image || "https://via.placeholder.com/400x400?text=תמונה+לא+זמינה"}
+                    alt={product.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              {/* פרטי המוצר */}
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* מחיר והנחות */}
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <Typography variant="h5" color="primary" fontWeight="bold">
+                      {formatPrice(product.price)}
+                    </Typography>
+                    {hasDiscount && originalPrice && (
+                      <>
+                        <Typography variant="body1" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                          {formatPrice(originalPrice)}
+                        </Typography>
+                        <Chip
+                          label={`הנחה ${product.discount}%`}
+                          color="error"
+                          size="small"
+                          sx={{ fontWeight: 'bold' }}
+                        />
+                      </>
+                    )}
+                  </Box>
+                  
+                  {product.stockQuantity > 0 ? (
+                    <Typography variant="body2" color="success.main">
+                      זמין במלאי
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="error">
+                      אזל מהמלאי
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* תיאור */}
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                    תיאור המוצר:
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    {product.description || 'אין תיאור זמין'}
+                  </Typography>
+                </Box>
+
+                {/* כפתורי פעולה */}
+                <Box sx={{ display: 'flex', gap: 2, mt: 'auto' }}>
+                  <Button
+                    variant="contained"
+                    onClick={handleAddToCart}
+                    disabled={isOutOfStock}
+                    startIcon={<ShoppingCartIcon />}
+                    sx={{ flex: '1 0 200px' }}
+                  >
+                    {isOutOfStock ? 'אזל מהמלאי' : 'הוסף לעגלה'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={handleToggleFavorite}
+                    startIcon={isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+                    sx={{ flex: '1 0 200px' }}
+                  >
+                    {isFavorite ? 'הסר ממועדפים' : 'שמור למועדפים'}
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'flex-start', p: 2 }}>
+            <Button onClick={handleCloseDialog} color="primary" variant="outlined">
+              סגור
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
           <Alert
             severity={snackbar.severity}
@@ -270,7 +397,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
     );
   }
 
-  // Grid view (default)
+  // רנדור מצב רשת (grid) - ברירת המחדל
   return (
     <>
       <Card
@@ -279,7 +406,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          direction: "rtl", // הוספת RTL
+          direction: "rtl",
           transition: "all 0.3s ease",
           "&:hover": {
             transform: "translateY(-8px)",
@@ -325,8 +452,6 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
 
           {/* Top badges */}
           <Box sx={{ position: "absolute", top: 12, right: 12 }}>
-            {" "}
-            {/* שונה מ-right ל-left */}
             {hasDiscount && (
               <Chip
                 icon={<LocalOfferIcon />}
@@ -377,7 +502,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             sx={{
               position: "absolute",
               top: 12,
-              left: 12, // נשאר באותו מקום
+              left: 12,
               backgroundColor: "rgba(255,255,255,0.9)",
               "&:hover": {
                 backgroundColor: "rgba(255,255,255,1)",
@@ -410,7 +535,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               sx={{
                 fontWeight: "bold",
                 mb: 1,
-                textAlign: "right", // יישור לימין
+                textAlign: "right",
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
@@ -427,7 +552,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               color="text.secondary"
               sx={{
                 mb: 2,
-                textAlign: "right", // יישור לימין
+                textAlign: "right",
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
@@ -447,8 +572,6 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                 justifyContent: "flex-end",
               }}
             >
-              {" "}
-              {/* יישור לימין */}
               {product.numReviews > 0 && (
                 <Typography
                   variant="body2"
@@ -462,7 +585,6 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             </Box>
           </Box>
 
-          {/* תיקון פשוט: אל תציג כלום אם אין הנחה */}
           <Box
             sx={{
               display: "flex",
@@ -476,7 +598,6 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             <Typography variant="h6" color="primary" fontWeight="bold">
               {formatPrice(product.price)}
             </Typography>
-            {/* הצג מחיר מקורי רק אם יש הנחה ממשית */}
             {hasDiscount && originalPrice && originalPrice > product.price && (
               <Typography
                 variant="body2"
@@ -499,12 +620,13 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             p: 0,
             height: "60px",
             flexShrink: 0,
-            direction: "ltr", // שמירה על סדר הכפתורים במצב LTR
+            direction: "ltr",
           }}
         >
           <Button
             size="small"
             startIcon={<VisibilityIcon />}
+            onClick={handleOpenDialog}
             sx={{
               flex: 1,
               borderRadius: 0,
@@ -538,6 +660,124 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
           </Button>
         </CardActions>
       </Card>
+
+      {/* דיאלוג מפורט למוצר */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        fullScreen={fullScreen}
+        maxWidth="md"
+        fullWidth
+        aria-labelledby="product-dialog-title"
+        sx={{
+          '& .MuiDialog-paper': {
+            direction: 'rtl',
+          },
+        }}
+      >
+        <DialogTitle id="product-dialog-title" sx={{ textAlign: 'center', pb: 1 }}>
+          {product.name}
+        </DialogTitle>
+        <Divider />
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+            {/* תמונת המוצר */}
+            <Box sx={{ flex: 1, maxWidth: { md: '50%' }, display: 'flex', justifyContent: 'center' }}>
+              <Box
+                sx={{
+                  width: '100%',
+                  maxWidth: 400,
+                  height: 400,
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                  boxShadow: 2,
+                }}
+              >
+                <img
+                  src={product.imageUrl || product.image || "https://via.placeholder.com/400x400?text=תמונה+לא+זמינה"}
+                  alt={product.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* פרטי המוצר */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* מחיר והנחות */}
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Typography variant="h5" color="primary" fontWeight="bold">
+                    {formatPrice(product.price)}
+                  </Typography>
+                  {hasDiscount && originalPrice && (
+                    <>
+                      <Typography variant="body1" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                        {formatPrice(originalPrice)}
+                      </Typography>
+                      <Chip
+                        label={`הנחה ${product.discount}%`}
+                        color="error"
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      />
+                    </>
+                  )}
+                </Box>
+                
+                {product.stockQuantity > 0 ? (
+                  <Typography variant="body2" color="success.main">
+                    זמין במלאי
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" color="error">
+                    אזל מהמלאי
+                  </Typography>
+                )}
+              </Box>
+
+              {/* תיאור */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  תיאור המוצר:
+                </Typography>
+                <Typography variant="body1" paragraph>
+                  {product.description || 'אין תיאור זמין'}
+                </Typography>
+              </Box>
+
+              {/* כפתורי פעולה */}
+              <Box sx={{ display: 'flex', gap: 2, mt: 'auto' }}>
+                <Button
+                  variant="contained"
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock}
+                  startIcon={<ShoppingCartIcon />}
+                  sx={{ flex: '1 0 200px' }}
+                >
+                  {isOutOfStock ? 'אזל מהמלאי' : 'הוסף לעגלה'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={handleToggleFavorite}
+                  startIcon={isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+                  sx={{ flex: '1 0 200px' }}
+                >
+                  {isFavorite ? 'הסר ממועדפים' : 'שמור למועדפים'}
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'flex-start', p: 2 }}>
+          <Button onClick={handleCloseDialog} color="primary" variant="outlined">
+            סגור
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

@@ -17,8 +17,8 @@ input[type="email"],
 input[type="tel"],
 input[type="url"],
 input.ltr-text {
-  direction: ltr;
-  text-align: left;
+  direction: rtl;
+  text-align: right;
 }
 
 /* כלל כללי לגוף האתר */

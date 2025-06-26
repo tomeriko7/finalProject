@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import {
   Box,
@@ -19,6 +19,7 @@ import {
   Breadcrumbs,
   Link,
   Paper,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -30,7 +31,6 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   Home as HomeIcon,
-  SafetyDivider,
 } from "@mui/icons-material";
 import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../services/AuthContext";
@@ -53,9 +53,20 @@ export const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useContext(AuthContext);
+  
+  // הוספת בדיקת מדיה למובייל וטאבלט
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  
+  // סגירת התפריט באופן אוטומטי במובייל בטעינה ראשונית
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile]);
 
   // Check if user is admin, if not redirect to homepage
-  React.useEffect(() => {
+  useEffect(() => {
     if (!user?.isAdmin) {
       navigate("/");
     }
@@ -113,21 +124,21 @@ export const AdminLayout = () => {
           zIndex: theme.zIndex.drawer + 1,
           backgroundColor: theme.palette.primary.main,
           boxShadow: "0 4px 20px 0 rgba(0,0,0,0.1)",
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          marginRight: { sm: `${drawerWidth}px` },
+          width: { xs: '100%', sm: `calc(100% - ${open ? drawerWidth : theme.spacing(9)}px)` },
+          marginRight: { xs: 0, sm: open ? `${drawerWidth}px` : theme.spacing(9) },
           transition: theme.transitions.create(["margin", "width"], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ px: { xs: 1, sm: 2 } }}>
           <IconButton
             color="inherit"
             aria-label="toggle drawer"
             onClick={handleDrawerToggle}
             edge="start"
-            sx={{ mr: 2 }}
+            sx={{ mr: { xs: 1, sm: 2 } }}
           >
             <MenuIcon />
           </IconButton>
@@ -135,19 +146,26 @@ export const AdminLayout = () => {
             variant="h6"
             noWrap
             component="div"
-            sx={{ flexGrow: 1, fontWeight: "bold", mr: 2 }} // הוספתי כאן רווח
+            sx={{ 
+              flexGrow: 1, 
+              fontWeight: "bold", 
+              mr: 2,
+              fontSize: { xs: '1rem', sm: '1.25rem' } 
+            }}
           >
-            מערכת ניהול | {getCurrentPageTitle()}
+            {isMobile ? getCurrentPageTitle() : `מערכת ניהול | ${getCurrentPageTitle()}`}
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              שלום, {user?.firstName || "מנהל"}
-            </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 } }}>
+            {!isMobile && (
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                שלום, {user?.firstName || "מנהל"}
+              </Typography>
+            )}
             <Avatar
               sx={{
                 bgcolor: theme.palette.secondary.main,
-                width: 36,
-                height: 36,
+                width: { xs: 32, sm: 36 },
+                height: { xs: 32, sm: 36 },
                 border: `2px solid ${theme.palette.common.white}`,
               }}
             >
@@ -159,41 +177,29 @@ export const AdminLayout = () => {
 
       {/* Sidebar Drawer */}
       <Drawer
-        variant="permanent"
-        open={open}
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? open : true}
         anchor="right"
+        onClose={isMobile ? handleDrawerToggle : undefined}
+        ModalProps={{
+          keepMounted: true, // שיפור ביצועים במובייל
+        }}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
           whiteSpace: "nowrap",
           boxSizing: "border-box",
-          ...(open && {
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-              transition: theme.transitions.create("width", {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-              boxSizing: "border-box",
-              borderLeft: "none",
-              borderRight: "1px solid rgba(0,0,0,0.12)",
-              boxShadow: "-1px 0px 10px rgba(0,0,0,0.08)",
-            },
-          }),
-          ...(!open && {
-            "& .MuiDrawer-paper": {
-              transition: theme.transitions.create("width", {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-              }),
-              overflowX: "hidden",
-              width: theme.spacing(9),
-              boxSizing: "border-box",
-              borderLeft: "none",
-              borderRight: "1px solid rgba(0,0,0,0.12)",
-              boxShadow: "-1px 0px 10px rgba(0,0,0,0.08)",
-            },
-          }),
+          "& .MuiDrawer-paper": {
+            width: isMobile ? '100%' : (open ? drawerWidth : theme.spacing(9)),
+            transition: theme.transitions.create("width", {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            boxSizing: "border-box",
+            borderLeft: "none",
+            borderRight: "1px solid rgba(0,0,0,0.12)",
+            boxShadow: "-1px 0px 10px rgba(0,0,0,0.08)",
+          },
         }}
       >
         <Toolbar />
@@ -216,14 +222,16 @@ export const AdminLayout = () => {
                 Hatene Admin
               </Typography>
             )}
-            <IconButton onClick={handleDrawerToggle}>
-              <ChevronRightIcon
-                sx={{
-                  transform: open ? "rotate(180deg)" : "none",
-                  transition: "transform 0.3s",
-                }}
-              />
-            </IconButton>
+            {!isMobile && (
+              <IconButton onClick={handleDrawerToggle}>
+                <ChevronRightIcon
+                  sx={{
+                    transform: open ? "rotate(180deg)" : "none",
+                    transition: "transform 0.3s",
+                  }}
+                />
+              </IconButton>
+            )}
           </Box>
           <Divider />
           <List>
@@ -237,11 +245,12 @@ export const AdminLayout = () => {
                   component={RouterLink}
                   to={item.path}
                   selected={location.pathname === item.path}
+                  onClick={isMobile ? handleDrawerToggle : undefined}
                   sx={{
-                    minHeight: 48,
+                    minHeight: { xs: 56, sm: 48 },
                     justifyContent: open ? "initial" : "center",
                     px: 2.5,
-                    py: 1.5,
+                    py: { xs: 1.8, sm: 1.5 },
                     borderRadius: "8px",
                     mx: 1,
                     "&.Mui-selected": {
@@ -261,6 +270,7 @@ export const AdminLayout = () => {
                       minWidth: 0,
                       mr: open ? 3 : "auto",
                       justifyContent: "center",
+                      fontSize: { xs: '1.2rem', sm: '1rem' }
                     }}
                   >
                     {item.icon}
@@ -272,6 +282,7 @@ export const AdminLayout = () => {
                       transition: "opacity 0.3s",
                       "& .MuiTypography-root": {
                         fontWeight: location.pathname === item.path ? 600 : 400,
+                        fontSize: { xs: '1rem', sm: 'inherit' }
                       },
                     }}
                   />
@@ -285,7 +296,7 @@ export const AdminLayout = () => {
               <ListItemButton
                 onClick={handleLogout}
                 sx={{
-                  minHeight: 48,
+                  minHeight: { xs: 56, sm: 48 },
                   justifyContent: open ? "initial" : "center",
                   px: 2.5,
                   borderRadius: "8px",
@@ -310,7 +321,12 @@ export const AdminLayout = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary="התנתקות"
-                  sx={{ opacity: open ? 1 : 0 }}
+                  sx={{ 
+                    opacity: open ? 1 : 0,
+                    "& .MuiTypography-root": {
+                      fontSize: { xs: '1rem', sm: 'inherit' }
+                    }, 
+                  }}
                 />
               </ListItemButton>
             </ListItem>
@@ -323,29 +339,49 @@ export const AdminLayout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          mt: 8,
-          marginRight: { xs: 0, sm: `${drawerWidth}px` },
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          p: { xs: 1.5, sm: 2, md: 3 },
+          mt: { xs: 7, sm: 8 },
+          marginRight: { 
+            xs: 0, 
+            sm: isMobile ? 0 : (open ? `${drawerWidth}px` : theme.spacing(9)) 
+          },
+          width: { 
+            xs: '100%', 
+            sm: isMobile ? '100%' : `calc(100% - ${open ? drawerWidth : theme.spacing(9)}px)` 
+          },
           transition: theme.transitions.create(["margin", "width"], {
             easing: theme.transitions.easing.easeOut,
             duration: theme.transitions.duration.enteringScreen,
           }),
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" disableGutters={isMobile}>
           {/* Breadcrumbs */}
           <Paper
             elevation={0}
             sx={{
-              p: 2,
-              mb: 3,
+              p: { xs: 1, sm: 2 },
+              mb: { xs: 2, sm: 3 },
               borderRadius: 2,
               backgroundColor: theme.palette.background.default,
               border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Breadcrumbs separator="›" aria-label="breadcrumb">
+            <Breadcrumbs 
+              separator="›" 
+              aria-label="breadcrumb"
+              sx={{
+                "& .MuiBreadcrumbs-ol": {
+                  flexWrap: isMobile ? "nowrap" : "wrap",
+                  overflow: isMobile ? "auto" : "visible",
+                  whiteSpace: isMobile ? "nowrap" : "normal",
+                  scrollbarWidth: "none",
+                  "&::-webkit-scrollbar": {
+                    display: "none"
+                  }
+                }
+              }}
+            >
               {generateBreadcrumbs().map((breadcrumb, index) => (
                 <Link
                   key={index}
@@ -362,6 +398,7 @@ export const AdminLayout = () => {
                     alignItems: "center",
                     fontWeight:
                       index === generateBreadcrumbs().length - 1 ? 600 : 400,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
                   }}
                 >
                   {breadcrumb.icon && (
