@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import connectDB from './config/database.js';
 import productRoutes from './routes/productRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import logger from './utils/logger.js';
 
 dotenv.config();
 
@@ -23,25 +24,61 @@ async function startServer() {
   // Dynamic import for order routes
   const orderModule = await import('./routes/orderRoutes.js');
   const orderRoutes = orderModule.default;
+  
+  // Dynamic import for admin routes
+  const adminModule = await import('./routes/adminRoutes.js');
+  const adminRoutes = adminModule.default;
 
   const app = express();
   const PORT = process.env.PORT || 5000;
 
   // Connect to MongoDB
-  connectDB();
+  try {
+    await connectDB();
+    logger.info('MongoDB connection established successfully');
+  } catch (error) {
+    logger.error('Failed to connect to MongoDB', { error: error.message });
+    process.exit(1);
+  }
 
   // Middleware
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   app.use(cookieParser());
+  
+  // Request logging middleware
+  app.use((req, res, next) => {
+    logger.debug('Incoming request', { 
+      method: req.method,
+      path: req.path,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+    
+    // Log response time
+    const startTime = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - startTime;
+      const level = res.statusCode >= 400 ? 'warn' : 'debug';
+      logger[level]('Request completed', {
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`
+      });
+    });
+    next();
+  });
 
   // Enable CORS
+  const corsOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
   app.use(
     cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: corsOrigin,
       credentials: true,
     })
   );
+  logger.info('CORS enabled', { origin: corsOrigin });
 
   // Set security headers
   app.use((req, res, next) => {
@@ -57,6 +94,17 @@ async function startServer() {
   app.use('/api/products', productRoutes);
   app.use('/api/upload', uploadRoutes);
   app.use('/api/orders', orderRoutes);
+  app.use('/api/admin', adminRoutes);
+  
+  logger.info('Routes registered', {
+    routes: [
+      '/api/auth',
+      '/api/products',
+      '/api/upload',
+      '/api/orders',
+      '/api/admin'
+    ]
+  });
 
   // Make uploads folder static
   const uploadsDir = path.join(__dirname, 'uploads');
@@ -64,6 +112,7 @@ async function startServer() {
 
 // Welcome route
 app.get('/', (req, res) => {
+  logger.info('Welcome route accessed', { ip: req.ip });
   res.json({ 
     message: 'Welcome to Flower Shop API!',
     version: '1.0.0',
@@ -89,6 +138,7 @@ app.get('/', (req, res) => {
 
 // Health check route
 app.get('/health', (req, res) => {
+  logger.debug('Health check requested', { ip: req.ip });
   res.json({
     success: true,
     message: 'Server is running',
@@ -99,7 +149,13 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
+  logger.error('Server error', { 
+    error: err.message, 
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    ip: req.ip
+  });
   
   // Handle JWT errors
   if (err.name === 'JsonWebTokenError') {
@@ -146,6 +202,11 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
+  logger.warn('Route not found', { 
+    path: req.originalUrl, 
+    method: req.method, 
+    ip: req.ip 
+  });
   res.status(404).json({ 
     success: false,
     message: 'Route not found',
@@ -165,11 +226,16 @@ app.use((req, res) => {
 });
 
   app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`http://localhost:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`Server started successfully`, {
+      port: PORT,
+      url: `http://localhost:${PORT}`,
+      environment: process.env.NODE_ENV || 'development'
+    });
   });
 }
 
 // Start the server
-startServer().catch(console.error);
+startServer().catch(error => {
+  logger.error('Failed to start server', { error: error.message, stack: error.stack });
+  process.exit(1);
+});

@@ -1,6 +1,8 @@
 // controllers/authController.js
 import User from '../models/User.js';
 import { generateToken } from '../utils/generateToken.js';
+import logger from '../utils/logger.js';
+import { safeMongooseSave } from '../middleware/validationMiddleware.js';
 import { validationResult } from 'express-validator';
 
 // Register new user
@@ -47,33 +49,38 @@ const register = async (req, res) => {
       dateOfBirth
     });
 
-    await user.save();
+    // Use safeMongooseSave to validate and save the user
+    const savedUser = await safeMongooseSave(user, res, 'User registration');
+    if (!savedUser) return; // Error response already sent by safeMongooseSave
+
+    logger.info('New user registered', { userId: savedUser._id, email: savedUser.email });
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(savedUser._id);
 
     // Update last login
-    await user.updateLastLogin();
+    await savedUser.updateLastLogin();
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'המשתמש נרשם והתחבר בהצלחה',
       token,
+      autoLogin: true, // סימון שזו התחברות אוטומטית
       user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-        address: user.address,
-        isAdmin: user.isAdmin,
-        createdAt: user.createdAt
+        id: savedUser._id,
+        firstName: savedUser.firstName,
+        lastName: savedUser.lastName,
+        fullName: savedUser.fullName,
+        email: savedUser.email,
+        phone: savedUser.phone,
+        address: savedUser.address,
+        isAdmin: savedUser.isAdmin,
+        createdAt: savedUser.createdAt
       }
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('User registration failed', { error: error.message, stack: error.stack, email: req.body.email });
     
     // Handle MongoDB duplicate key error
     if (error.code === 11000) {
@@ -105,15 +112,6 @@ const register = async (req, res) => {
 // Login user
 const login = async (req, res) => {
   try {
-    // Check validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation errors',
-        errors: errors.array()
-      });
-    }
 
     const { email, password } = req.body;
 
@@ -169,7 +167,7 @@ const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('User login failed', { error: error.message, stack: error.stack, email: req.body.email });
     res.status(500).json({
       success: false,
       message: 'Server error during login',
@@ -210,7 +208,7 @@ const getProfile = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get profile error:', error);
+    logger.error('Profile fetch error', { error: error.message, stack: error.stack, userId: req.user.id });
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -233,56 +231,46 @@ const updateProfile = async (req, res) => {
 
     const updates = {};
 
-    // שדות בסיסיים
-    if (req.body.firstName) updates.firstName = req.body.firstName;
-    if (req.body.lastName) updates.lastName = req.body.lastName;
-    if (req.body.phone) updates.phone = req.body.phone;
-
-    // כתובת מקוננת
-    if (req.body.address) {
-      updates.address = {};
-      if (req.body.address.street) updates.address.street = req.body.address.street;
-      if (req.body.address.city) updates.address.city = req.body.address.city;
-      if (req.body.address.zipCode) updates.address.zipCode = req.body.address.zipCode;
+    // Basic validation is handled by Joi validation middleware
+    for (const key in req.body) {
+      if (['firstName', 'lastName', 'phone', 'address', 'dateOfBirth'].includes(key)) {
+        updates[key] = req.body[key];
+      }
     }
 
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No valid fields to update'
-      });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      updates,
-      { new: true, runValidators: true }
-    );
-
+    // Get current user
+    let user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
+    
+    // Update fields
+    Object.assign(user, updates);
+    
+    // Use safeMongooseSave to validate and save the user
+    const updatedUser = await safeMongooseSave(user, res, 'Profile update');
+    if (!updatedUser) return; // Error response already sent by safeMongooseSave
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
       user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-        address: user.address,
-        updatedAt: user.updatedAt
+        id: updatedUser._id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        fullName: updatedUser.fullName,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        updatedAt: updatedUser.updatedAt
       }
     });
 
   } catch (error) {
-    console.error('Update profile error:', error);
+    logger.error('Update profile error', { error: error.message, stack: error.stack, userId: req.user.id });
     res.status(500).json({
       success: false,
       message: 'Server error during profile update',
@@ -335,7 +323,12 @@ const changePassword = async (req, res) => {
 
     // Update password
     user.password = newPassword;
-    await user.save();
+    
+    // Use safeMongooseSave to validate and save the user
+    const updatedUser = await safeMongooseSave(user, res, 'Password change');
+    if (!updatedUser) return; // Error response already sent by safeMongooseSave
+    
+    logger.info('User password changed', { userId: updatedUser._id, email: updatedUser.email });
 
     res.json({
       success: true,
@@ -343,7 +336,7 @@ const changePassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('Change password error', { error: error.message, stack: error.stack, userId: req.user.id });
     res.status(500).json({
       success: false,
       message: 'Server error during password change',
@@ -357,7 +350,7 @@ const logout = async (req, res) => {
   try {
     // In JWT, logout is typically handled on the client side by removing the token
     // But we can log this for security/audit purposes
-    console.log(`User ${req.user.email} logged out at ${new Date()}`);
+    logger.info('User logged out', { userId: req.user.id, email: req.user.email });
     
     res.json({
       success: true,
@@ -365,7 +358,7 @@ const logout = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error('Logout error', { error: error.message, stack: error.stack, userId: req.user.id });
     res.status(500).json({
       success: false,
       message: 'Server error during logout',
@@ -377,7 +370,15 @@ const logout = async (req, res) => {
 // Forgot password (placeholder - would typically send email)
 const forgotPassword = async (req, res) => {
   try {
+    // Add schema validation for email
     const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'נדרשת כתובת אימייל'
+      });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -393,7 +394,7 @@ const forgotPassword = async (req, res) => {
     // 2. Save it to database with expiration
     // 3. Send email with reset link
     
-    console.log(`Password reset requested for: ${email}`);
+    logger.info('Password reset requested', { email });
     
     res.json({
       success: true,
@@ -401,7 +402,7 @@ const forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error('Forgot password error', { error: error.message, stack: error.stack, email: req.body.email });
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -415,6 +416,8 @@ const verifyToken = async (req, res) => {
   try {
     // If we reach here, the token is valid (middleware already verified it)
     const user = await User.findById(req.user.id);
+    
+    logger.debug('Token verification', { userId: req.user.id, valid: Boolean(user && user.isActive) });
     
     if (!user || !user.isActive) {
       return res.status(401).json({
@@ -436,7 +439,7 @@ const verifyToken = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Verify token error:', error);
+    logger.error('Verify token error', { error: error.message, stack: error.stack, userId: req.user?.id });
     res.status(500).json({
       success: false,
       message: 'Server error',

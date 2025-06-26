@@ -233,9 +233,9 @@ const MainNavbar = ({
                   <IconButton
                     color="inherit"
                     onClick={handleFavoritesOpen}
+                    size={isSmall ? "small" : "medium"}
                     sx={{
                       transition: "color 0.2s ease-in-out",
-                      color: "#222",
                       "&:hover": {
                         color: theme.palette.primary.main,
                       },
@@ -246,22 +246,16 @@ const MainNavbar = ({
                       color="error"
                       sx={{
                         "& .MuiBadge-badge": {
-                          fontSize: "10px",
-                          minWidth: "16px",
-                          height: "16px",
+                          fontSize: "12px",
+                          minWidth: "14px",
+                          height: "14px",
                         },
                       }}
                     >
                       {favoritesCount > 0 ? (
-                        <FavoriteIcon
-                          fontSize="small"
-                          sx={{ color: "inherit" }}
-                        />
+                        <FavoriteIcon fontSize="small" color="inherit" />
                       ) : (
-                        <FavoriteBorderIcon
-                          fontSize="small"
-                          sx={{ color: "inherit" }}
-                        />
+                        <FavoriteBorderIcon fontSize="small" color="inherit" />
                       )}
                     </Badge>
                   </IconButton>
@@ -317,42 +311,42 @@ const MainNavbar = ({
                         }}
                       >
                         {favoritesCount > 0 ? (
-                          <FavoriteIcon color="primary" />
+                          <FavoriteIcon color="inherit" />
                         ) : (
-                          <FavoriteBorderIcon color="primary" />
+                          <FavoriteBorderIcon color="inherit" />
                         )}
                       </Badge>
                     </IconButton>
                   </Tooltip>
 
                   <Tooltip title="עגלת קניות">
-                    <IconButton
-                      color="inherit"
-                      component={RouterLink}
-                      to="/cart"
-                      size={isSmall ? "small" : "medium"}
+                  <IconButton
+                    color="inherit"
+                    component={RouterLink}
+                    to="/cart"
+                    size={isSmall ? "small" : "medium"}
+                    sx={{
+                      transition: "color 0.2s ease-in-out",
+                      "&:hover": {
+                        color: theme.palette.primary.main,
+                      },
+                    }}
+                  >
+                    <Badge
+                      badgeContent={cartItemsCount}
+                      color="error"
                       sx={{
-                        transition: "color 0.2s ease-in-out",
-                        "&:hover": {
-                          color: theme.palette.primary.main,
+                        "& .MuiBadge-badge": {
+                          fontSize: "12px",
+                          minWidth: "14px",
+                          height: "14px",
                         },
                       }}
                     >
-                      <Badge
-                        badgeContent={cartItemsCount}
-                        color="error"
-                        sx={{
-                          "& .MuiBadge-badge": {
-                            fontSize: "9px",
-                            minWidth: "14px",
-                            height: "14px",
-                          },
-                        }}
-                      >
-                        <ShoppingCartIcon color="primary" />
-                      </Badge>
-                    </IconButton>
-                  </Tooltip>
+                      <ShoppingCartIcon fontSize="small" color="inherit" />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
                 </>
               )}
 
@@ -586,6 +580,7 @@ const MainNavbar = ({
                   justifyContent: "flex-start",
                   textAlign: "right",
                   borderRadius: 2,
+                  gap:2
                 }}
               >
                 התנתק

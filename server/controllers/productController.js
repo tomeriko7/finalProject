@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import logger from "../utils/logger.js";
+import { safeMongooseSave } from '../middleware/validationMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,12 +14,12 @@ const __dirname = path.dirname(__filename);
 // @route   POST /api/products
 // @access  Private/Admin
 export const createProduct = asyncHandler(async (req, res) => {
-  console.log("Request body:", req.body);
-  console.log("Request file:", req.file);
-
-  // Debug the content type and raw request
-  console.log("Content-Type:", req.headers["content-type"]);
-  console.log("Form fields received:", Object.keys(req.body));
+  logger.debug("Creating new product", { 
+    contentType: req.headers["content-type"],
+    formFields: Object.keys(req.body),
+    hasFile: !!req.file,
+    userId: req.user?._id
+  });
 
   // Use nullish coalescing to ensure we have all fields with defaults
   const name = req.body.name || "";
@@ -29,15 +31,14 @@ export const createProduct = asyncHandler(async (req, res) => {
   const discount = req.body.discount || 0;
   const tags = req.body.tags || "[]";
 
-  console.log("Extracted fields with defaults:", {
+  logger.debug("Product fields extracted", {
     name,
-    description,
-    price,
     category,
+    price,
     stockQuantity,
     isActive,
     discount,
-    tags,
+    tagsProvided: !!tags
   });
 
   // Parse tags if it's a JSON string (from FormData)
@@ -93,11 +94,11 @@ export const createProduct = asyncHandler(async (req, res) => {
 
     // Set imageUrl
     imageUrl = `/uploads/products/${fileName}`;
-    console.log("Image saved to:", targetPath);
+    logger.debug("Product image saved", { fileName, path: targetPath });
   } else if (req.body.imageUrl) {
     // If image URL was provided directly in the request
     imageUrl = req.body.imageUrl;
-    console.log("Using provided imageUrl:", imageUrl);
+    logger.debug("Using provided imageUrl", { imageUrl });
   }
 
   // Create product with values we extracted earlier
@@ -113,30 +114,42 @@ export const createProduct = asyncHandler(async (req, res) => {
     tags: Array.isArray(parsedTags) ? parsedTags : [],
   };
 
-  console.log("Final product data to save:", productData);
+  logger.debug("Final product data prepared", { 
+    productName: productData.name,
+    category: productData.category,
+    hasImage: !!productData.imageUrl
+  });
 
   // Add user if authenticated
   if (req.user) {
     productData.user = req.user._id;
   }
 
-  console.log("Product data to save:", productData);
 
-  let createdProduct;
-  try {
-    const product = new Product(productData);
-    createdProduct = await product.save();
-    console.log("Product saved successfully:", createdProduct);
 
-    res.status(201).json({
-      success: true,
-      data: createdProduct,
+  // יצירת מוצר חדש עם ולידציה מאובטחת
+  const product = new Product(productData);
+  const createdProduct = await safeMongooseSave(product, res, 'יצירת מוצר');
+  if (!createdProduct) return;
+    
+  logger.info("Product created successfully", { 
+    productId: createdProduct._id,
+    name: createdProduct.name,
+    userId: req.user?._id
+  });
+  
+  // Admin action logging
+  if (req.user?.isAdmin) {
+    logger.adminAction(req.user._id, 'create_product', {
+      productId: createdProduct._id,
+      productName: createdProduct.name
     });
-  } catch (err) {
-    console.error("Error saving product:", err);
-    res.status(500);
-    throw new Error(`Failed to save product: ${err.message}`);
   }
+
+  res.status(201).json({
+    success: true,
+    data: createdProduct,
+  });
 });
 
 // @desc    Get all products with filtering, sorting and pagination
@@ -281,9 +294,31 @@ export const updateProduct = asyncHandler(async (req, res) => {
   if (stockQuantity) product.stockQuantity = Number(stockQuantity);
   if (isActive !== undefined) product.isActive = isActive;
   if (discount) product.discount = Number(discount);
-  if (tags) product.tags = tags.split(",").map((tag) => tag.trim());
+  if (tags) {
+    if (Array.isArray(tags)) {
+      product.tags = tags;
+    } else if (typeof tags === 'string') {
+      product.tags = tags.split(",").map((tag) => tag.trim());
+    }
+  }
 
-  const updatedProduct = await product.save();
+  // שמירת עדכון המוצר עם ולידציה מאובטחת
+  const updatedProduct = await safeMongooseSave(product, res, 'עדכון מוצר');
+  if (!updatedProduct) return;
+  
+  logger.info("Product updated", {
+    productId: updatedProduct._id,
+    name: updatedProduct.name,
+    userId: req.user?._id
+  });
+  
+  // Admin action logging
+  if (req.user?.isAdmin) {
+    logger.adminAction(req.user._id, 'update_product', {
+      productId: updatedProduct._id,
+      productName: updatedProduct.name
+    });
+  }
 
   res.json({
     success: true,
@@ -310,8 +345,33 @@ export const deleteProduct = asyncHandler(async (req, res) => {
     }
   }
 
-  // מחיקה ישירה עם findByIdAndDelete (בלי לקרוא remove)
-  await Product.findByIdAndDelete(req.params.id);
+  // מחיקה מאובטחת עם findByIdAndDelete
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+  } catch (err) {
+    logger.error("Error deleting product", { 
+      error: err.message,
+      stack: err.stack,
+      productId: req.params.id,
+      userId: req.user?._id
+    });
+    res.status(500);
+    throw new Error(`Failed to delete product: ${err.message}`);
+  }
+  
+  logger.info("Product deleted", {
+    productId: req.params.id,
+    productName: product.name,
+    userId: req.user?._id
+  });
+  
+  // Admin action logging
+  if (req.user?.isAdmin) {
+    logger.adminAction(req.user._id, 'delete_product', {
+      productId: req.params.id,
+      productName: product.name
+    });
+  }
 
   res.json({
     success: true,
@@ -355,7 +415,23 @@ export const createProductReview = asyncHandler(async (req, res) => {
     product.reviews.reduce((acc, item) => item.rating + acc, 0) /
     product.reviews.length;
 
-  await product.save();
+  // שמירת ביקורת המוצר עם ולידציה מאובטחת
+  const updatedProduct = await safeMongooseSave(product, res, 'הוספת ביקורת');
+  if (!updatedProduct) return;
+  
+  logger.info("Product review added", {
+    productId: product._id,
+    productName: product.name,
+    userId: req.user._id,
+    rating
+  });
+  
+  // User action logging
+  logger.userAction(req.user._id, 'add_review', {
+    productId: product._id,
+    productName: product.name,
+    rating
+  });
 
   res.status(201).json({
     success: true,
@@ -408,10 +484,31 @@ export const updateProductStock = asyncHandler(async (req, res) => {
     throw new Error("Invalid operation");
   }
 
-  await product.save();
+  // שמירת עדכון המלאי עם ולידציה מאובטחת
+  const updatedProduct = await safeMongooseSave(product, res, 'עדכון מלאי');
+  if (!updatedProduct) return;
+  
+  logger.info("Product stock updated", {
+    productId: updatedProduct._id,
+    productName: updatedProduct.name,
+    operation,
+    quantity,
+    newStock: updatedProduct.stockQuantity,
+    userId: req.user?._id
+  });
+  
+  // Admin action logging
+  if (req.user?.isAdmin) {
+    logger.adminAction(req.user._id, `${operation}_stock`, {
+      productId: updatedProduct._id,
+      productName: updatedProduct.name,
+      quantity,
+      newStock: updatedProduct.stockQuantity
+    });
+  }
 
   res.json({
     success: true,
-    data: product,
+    data: updatedProduct,
   });
 });

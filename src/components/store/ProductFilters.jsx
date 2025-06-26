@@ -61,7 +61,7 @@ const ProductFilters = ({
               .map(product => product.category)
           )].sort();
           
-          console.log('Extracted categories:', uniqueCategories);
+         
           setCategories(uniqueCategories);
         } else {
           setError('שגיאה בטעינת קטגוריות');

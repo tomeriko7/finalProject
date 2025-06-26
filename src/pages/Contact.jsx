@@ -1,238 +1,395 @@
 import React, { useState } from "react";
 import { Hero } from "../components/home/Hero";
-import { Box, Typography, Link, useMediaQuery, useTheme } from "@mui/material";
-import { Facebook, Twitter, YouTube } from '@mui/icons-material';
-import styles from "../styles/formStyles";
-function Contact() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
-  const [submitted, setSubmitted] = useState(false);
+import {
+  Snackbar,
+  Alert,
+  Box,
+  Typography,
+  Link,
+  useTheme,
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  IconButton,
+  Stack,
+  Paper,
+  Divider
+} from "@mui/material";
+import {
+  Facebook,
+  Twitter,
+  YouTube,
+  Phone,
+  Email,
+  LocationOn,
+  AccessTime,
+  Send,
+  WhatsApp,
+  Instagram,
+} from "@mui/icons-material";
+
+const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const [loading, setLoading] = useState(false);
+  const theme = useTheme();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!formData.name || !formData.email || !formData.message) {
+      setSnackbar({
+        open: true,
+        message: "יש למלא את כל השדות",
+        severity: "error",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      setSnackbar({
+        open: true,
+        message: "ההודעה נשלחה בהצלחה! נחזור אליך בהקדם",
+        severity: "success",
+      });
+      setFormData({ name: "", email: "", message: "" });
+      setLoading(false);
+    }, 1500);
   };
 
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
 
   return (
     <>
       <Hero />
- 
-      <Box sx={{ maxWidth: 700, mx: "auto", px: 2, pb: 4,mt:3, }}>
-        {/* טופס צור קשר עם תיחום */}
-        <Box
-  sx={{
-    mb: 3,
-    p: 3,
-    border: "1px solid",
-    borderColor: theme.palette.divider,
-    borderRadius: 2,
-    backgroundColor: theme.palette.background.paper,
-    color: theme.palette.text.primary,
-    boxShadow: "0px 4px 20px rgba(193, 177, 177, 0.15)", // בוקס שאדו חזק יותר
-  }}
->
-
-          <Box sx={{ mb: 2, textAlign: "right" }}>
-            <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-               צור קשר
+      <Box
+        sx={{
+          py: { xs: 8, md: 12 },
+          backgroundColor: theme.palette.background.default,
+          minHeight: "90vh",
+          direction: "rtl",
+        }}
+      >
+        <Container maxWidth="xl">
+          {/* Header */}
+          <Box sx={{ textAlign: "center", mb: { xs: 8, md: 12 } }}>
+            <Typography
+              variant="h3"
+              component="h1"
+              fontWeight={700}
+              gutterBottom
+              color="primary.main"
+              sx={{ 
+                fontSize: { xs: "2.5rem", md: "3.5rem" },
+                mb: 4
+              }}
+            >
+              צרו קשר איתנו
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              נשמח לשמוע ממך
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ 
+                maxWidth: 600, 
+                mx: "auto", 
+                fontSize: "1.2rem",
+                lineHeight: 1.8
+              }}
+            >
+              נשמח לענות על כל שאלה ולסייע לכם בכל דרך אפשרית
             </Typography>
           </Box>
 
-          {submitted ? (
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: "#d0f0c0",
-                borderRadius: 1,
-                textAlign: "center",
-                fontWeight: "bold",
-                color: "#2e7d32",
-                
-              }}
-            >
-              ההודעה נשלחה בהצלחה! נחזור אליך בהקדם.
-            </Box>
-          ) : (
-            <form onSubmit={handleSubmit} style={{ direction: "rtl" }}>
-              <Box sx={{ mb: 1 }}>
-                <Typography component="label" htmlFor="name" sx={{ mb: 0.5, display: "block", fontWeight: 600, }}>
-                  שם מלא
-                </Typography>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: 4,
-                    border: "1px solid #ccc",
-                    fontSize: 16,
-                    boxSizing: "border-box",
-                    boxShadow:"0px 4px 20px rgba(241, 236, 236, 0.52)"
-                    
-                  }}
-                />
-              </Box>
-
-              <Box sx={{ mb: 1 }}>
-                <Typography component="label" htmlFor="email" sx={{ mb: 0.5, display: "block", fontWeight: 600 }}>
-                  אימייל
-                </Typography>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: 4,
-                    border: "1px solid #ccc",
-                    fontSize: 16,
-                    boxSizing: "border-box",
-                    boxShadow:"0px 4px 20px rgba(241, 236, 236, 0.52)"
-                  }}
-                />
-              </Box>
-
-              <Box sx={{ mb: 2 }}>
-                <Typography component="label" htmlFor="message" sx={{ mb: 0.5, display: "block", fontWeight: 600 }}>
-                  הודעה
-                </Typography>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  rows={4}
-                  style={{
-                    width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: 4,
-                    border: "1px solid #ccc",
-                    fontSize: 16,
-                    boxSizing: "border-box",
-                    resize: "vertical",
-                    boxShadow:"0px 4px 20px rgba(241, 236, 236, 0.52)"
-                  }}
-                />
-              </Box>
-
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  backgroundColor: styles.submitButton.backgroundColor,
-                  color: "white",
-                  padding: "12px 0",
-                  border: "none",
-                  borderRadius: 5,
-                  fontWeight: "bold",
-                  fontSize: 16,
-                  cursor: "pointer",
-                  transition: "background-color 0.3s",
-                  boxShadow:"0px 4px 20px rgba(193 146 115 / 78%)"
+          <Grid container spacing={{ xs: 6, md: 8, lg: 10 }} sx={{ justifyContent: 'center' }}>
+            {/* Contact Form */}
+            <Grid item xs={12} md={8} lg={6}>
+              <Paper 
+                elevation={3}
+                sx={{
+                  p: { xs: 6, md: 8 },
+                  borderRadius: 4,
+                  backgroundColor: theme.palette.background.paper,
+                  height: 'fit-content'
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgb(123 59 17 / 68%)")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = styles.submitButton.backgroundColor)}
               >
-                שליחה
-              </button>
-            </form>
-          )}
-        </Box>
+                <Typography variant="h4" fontWeight={600} gutterBottom color="text.primary" sx={{ mb: 3 }}>
+                  שלחו לנו הודעה
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 6, fontSize: '1.1rem' }}>
+                  מלאו את הטופס ונחזור אליכם במהירות האפשרית
+                </Typography>
 
-<Box
-  sx={{
-    mb: 3,
-    p: 3,
-    border: "1px solid",
-    borderColor: theme.palette.divider,
-    borderRadius: 2,
-    backgroundColor: theme.palette.background.paper,
-    color: theme.palette.text.primary,
-    boxShadow: "0px 4px 20px rgba(193, 177, 177, 0.15)", // בוקס שאדו חזק יותר
-  }}
->
+                <form onSubmit={handleSubmit}>
+                  <Stack spacing={4}>
+                    <TextField
+                      fullWidth
+                      label="שם מלא"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      variant="outlined"
+                      size="large"
+                    />
 
-  {/* תיבת מפה */}
-  <Box sx={{ flex: 1, minWidth: 0 }}>
-    <Typography
-      variant="h6"
-      sx={{ mb: 1, fontWeight: "bold", textAlign: "right" }}
-    >דרכי יצירת קשר והגעה
-    </Typography>
-    <Box
-      component="iframe"
-      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d49594.541087822734!2d34.847797730921336!3d32.09082829617387!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151d3673a30753b9%3A0xcde0651f23c1443c!2sPetah%20Tikva!5e0!3m2!1sen!2sil!4v1750080745871!5m2!1sen!2sil"
-      width="100%"
-      height="200"
-      style={{ border: 0, borderRadius: 6 }}
-      loading="lazy"
-      title="מפת הגעה למשתלה"
-    />
-  </Box>
+                    <TextField
+                      fullWidth
+                      label="כתובת אימייל"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      variant="outlined"
+                      size="large"
+                    />
 
-  {/* תיבת פרטי קשר */}
-  <Box sx={{ flex: 1, minWidth: 0, textAlign: "right", fontSize: 14, mt:4 }}>
-    <Typography sx={{ mb: 1 }}>
-      <strong>טלפון:</strong>{" "}
-      <Link
-        href="tel:+972500000000"
-        underline="hover"
-        color="inherit"
-        sx={{ direction: "ltr", display: "inline-block" }}
-      >
-        +972 5000 000
-      </Link>
-    </Typography>
-    <Typography sx={{ mb: 1 }}>
-      <strong>אימייל:</strong>{" "}
-      <Link
-        href="mailto:info@hatene.com"
-        underline="hover"
-        color="inherit"
-      >
-        info@hatene.com
-      </Link>
-    </Typography>
-    <Typography>
-      <strong>כתובת:</strong> ז'בוטינסקי פתח תקווה 
-    </Typography>
-    <Typography>
-      <strong>שעות פעילות:</strong> ראשון עד חמישי 10:00–17:00, שישי שבת סגור
-    </Typography>
-  </Box>
-  <Box sx={{ display: "flex", gap: 2 }}>
-              <Link href="https://facebook.com" target="_blank" color="inherit" aria-label="Facebook">
-                <Facebook />
-              </Link>
-              <Link href="https://twitter.com" target="_blank" color="inherit" aria-label="Twitter">
-                <Twitter />
-              </Link>
-              <Link href="https://youtube.com" target="_blank" color="inherit" aria-label="YouTube">
-                <YouTube />
-              </Link>
-            </Box>
-</Box>
+                    <TextField
+                      fullWidth
+                      label="ההודעה שלכם"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                      multiline
+                      rows={5}
+                      variant="outlined"
+                      placeholder="כתבו כאן את ההודעה שלכם..."
+                    />
 
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      size="large"
+                      disabled={loading}
+                      startIcon={<Send />}
+                      sx={{
+                        py: 2.5,
+                        px: 8,
+                        fontSize: "1.2rem",
+                        fontWeight: 600,
+                        alignSelf: "flex-start",
+                        minWidth: 250,
+                        mt: 2
+                      }}
+                    >
+                      {loading ? "שולח..." : "שליחת הודעה"}
+                    </Button>
+                  </Stack>
+                </form>
+              </Paper>
+            </Grid>
+
+            {/* Contact Information */}
+            <Grid item xs={12} md={8} lg={6}>
+              <Stack spacing={6}>
+                {/* Map */}
+                <Paper
+                  elevation={3}
+                  sx={{
+                    borderRadius: 4,
+                    overflow: "hidden"
+                  }}
+                >
+                  <Box
+                    component="iframe"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d49594.541087822734!2d34.847797730921336!3d32.09082829617387!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151d3673a30753b9%3A0xcde0651f23c1443c!2sPetah%20Tikva!5e0!3m2!1sen!2sil!4v1750080745871!5m2!1sen!2sil"
+                    width="100%"
+                    height="300"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    title="מפת הגעה"
+                  />
+                </Paper>
+
+                {/* Social Media */}
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: { xs: 6, md: 8 },
+                    borderRadius: 4,
+                    backgroundColor: theme.palette.background.paper
+                  }}
+                >
+                  <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 4 }}>
+                    עקבו אחרינו ברשתות החברתיות
+                  </Typography>
+                  <Stack direction="row" spacing={3} sx={{ mt: 2 }}>
+                    <IconButton
+                      component={Link}
+                      href="https://facebook.com"
+                      target="_blank"
+                      size="large"
+                      sx={{ 
+                        color: "#1877F2",
+                        p: 2,
+                        '&:hover': { backgroundColor: 'rgba(24, 119, 242, 0.1)' }
+                      }}
+                    >
+                      <Facebook sx={{ fontSize: 32 }} />
+                    </IconButton>
+                    <IconButton
+                      component={Link}
+                      href="https://instagram.com"
+                      target="_blank"
+                      size="large"
+                      sx={{ 
+                        color: "#E4405F",
+                        p: 2,
+                        '&:hover': { backgroundColor: 'rgba(228, 64, 95, 0.1)' }
+                      }}
+                    >
+                      <Instagram sx={{ fontSize: 32 }} />
+                    </IconButton>
+                    <IconButton
+                      component={Link}
+                      href="https://youtube.com"
+                      target="_blank"
+                      size="large"
+                      sx={{ 
+                        color: "#FF0000",
+                        p: 2,
+                        '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' }
+                      }}
+                    >
+                      <YouTube sx={{ fontSize: 32 }} />
+                    </IconButton>
+                    <IconButton
+                      component={Link}
+                      href="https://twitter.com"
+                      target="_blank"
+                      size="large"
+                      sx={{ 
+                        color: "#1DA1F2",
+                        p: 2,
+                        '&:hover': { backgroundColor: 'rgba(29, 161, 242, 0.1)' }
+                      }}
+                    >
+                      <Twitter sx={{ fontSize: 32 }} />
+                    </IconButton>
+                  </Stack>
+                </Paper>
+
+                {/* Contact Details */}
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: { xs: 6, md: 8 },
+                    borderRadius: 4,
+                    backgroundColor: theme.palette.background.paper
+                  }}
+                >
+                  <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 4 }}>
+                    פרטי התקשרות
+                  </Typography>
+
+                  <Stack spacing={4} sx={{ mt: 3 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <Phone sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 0.5 }}>
+                          טלפון
+                        </Typography>
+                        <Link href="tel:+972500000000" color="inherit" underline="hover" sx={{ fontSize: '1.1rem' }}>
+                          050-000-0000
+                        </Link>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <WhatsApp sx={{ color: "#25D366", fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 0.5 }}>
+                          ווטסאפ
+                        </Typography>
+                        <Link href="https://wa.me/972500000000" target="_blank" color="inherit" underline="hover" sx={{ fontSize: '1.1rem' }}>
+                          050-000-0000
+                        </Link>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <Email sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 0.5 }}>
+                          אימייל
+                        </Typography>
+                        <Link href="mailto:info@hatene.com" color="inherit" underline="hover" sx={{ fontSize: '1.1rem' }}>
+                          info@hatene.com
+                        </Link>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <LocationOn sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 0.5 }}>
+                          כתובת
+                        </Typography>
+                        <Typography sx={{ fontSize: '1.1rem' }}>רחוב ז'בוטינסקי, פתח תקווה</Typography>
+                      </Box>
+                    </Box>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <AccessTime sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 0.5 }}>
+                          שעות פעילות
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontSize: '1.1rem', mb: 0.5 }}>
+                          ראשון - חמישי: 10:00 - 17:00
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                          שישי-שבת: סגור
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Stack>
+            </Grid>
+          </Grid>
+        </Container>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ fontWeight: 600 }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </>
   );
-}
+};
 
 export default Contact;

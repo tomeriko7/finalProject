@@ -58,6 +58,7 @@ const Products = () => {
   const [success, setSuccess] = useState("");
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Get token from localStorage (adjust based on your auth implementation)
   const token = localStorage.getItem("token");
@@ -107,6 +108,9 @@ const Products = () => {
       ...product,
       tags: product.tags || [],
     });
+    setError("");
+    setSuccess("");
+    setFieldErrors({});
     setOpenDialog(true);
   };
 
@@ -114,6 +118,109 @@ const Products = () => {
     setOpenDialog(false);
     setCurrentProduct(null);
     setError("");
+    setFieldErrors({});
+  };
+
+  // פונקציה לוולידציה של שדה בודד
+  const validateField = (fieldName, value) => {
+    // המרה לטקסט בטוח
+    const stringValue = value != null ? String(value) : "";
+
+    switch (fieldName) {
+      case "name":
+        if (!stringValue || stringValue.trim() === "") {
+          return "שם המוצר הוא שדה חובה";
+        } else if (stringValue.trim().length < 2) {
+          return "שם המוצר חייב להיות לפחות 2 תווים";
+        } else if (stringValue.trim().length > 100) {
+          return "שם המוצר יכול להיות עד 100 תווים";
+        }
+        break;
+
+      case "description":
+        if (!stringValue || stringValue.trim() === "") {
+          return "תיאור המוצר הוא שדה חובה";
+        } else if (stringValue.trim().length < 10) {
+          return "תיאור המוצר חייב להיות לפחות 10 תווים";
+        } else if (stringValue.trim().length > 5000) {
+          return "תיאור המוצר יכול להיות עד 5000 תווים";
+        }
+        break;
+
+      case "price":
+        if (!stringValue || stringValue.trim() === "") {
+          return "מחיר הוא שדה חובה";
+        } else {
+          const price = parseFloat(stringValue);
+          if (isNaN(price)) {
+            return "מחיר חייב להיות מספר";
+          } else if (price <= 0) {
+            return "מחיר חייב להיות גדול מ-0";
+          }
+        }
+        break;
+
+      case "category":
+        if (!stringValue || stringValue.trim() === "") {
+          return "קטגוריה היא שדה חובה";
+        }
+        break;
+
+      case "stockQuantity":
+        if (stringValue && stringValue.trim() !== "") {
+          const stock = parseInt(stringValue);
+          if (isNaN(stock)) {
+            return "כמות מלאי חייבת להיות מספר שלם";
+          } else if (stock < 0) {
+            return "כמות מלאי לא יכולה להיות שלילית";
+          }
+        }
+        break;
+
+      case "discount":
+        if (stringValue && stringValue.trim() !== "") {
+          const discount = parseFloat(stringValue);
+          if (isNaN(discount)) {
+            return "הנחה חייבת להיות מספר";
+          } else if (discount < 0) {
+            return "הנחה לא יכולה להיות שלילית";
+          } else if (discount > 100) {
+            return "הנחה לא יכולה להיות יותר מ-100 אחוז";
+          }
+        }
+        break;
+
+      default:
+        break;
+    }
+    return null;
+  };
+
+  // פונקציה לעדכון שדה עם וולידציה
+  const handleFieldChange = (fieldName, value) => {
+    // עדכון הערך הגולמי (ללא עיבוד)
+    setCurrentProduct({
+      ...currentProduct,
+      [fieldName]: value,
+    });
+
+    // וולידציה בזמן אמת (רק לשדות שדורשים וולידציה)
+    if (
+      [
+        "name",
+        "description",
+        "price",
+        "category",
+        "stockQuantity",
+        "discount",
+      ].includes(fieldName)
+    ) {
+      const error = validateField(fieldName, value);
+      setFieldErrors((prev) => ({
+        ...prev,
+        [fieldName]: error,
+      }));
+    }
   };
 
   const handleSaveProduct = async () => {
@@ -121,34 +228,79 @@ const Products = () => {
       setLoading(true);
       setError("");
 
-      if (
-        !currentProduct.name ||
-        !currentProduct.description ||
-        !currentProduct.category ||
-        !currentProduct.price
-      ) {
-        setError("אנא מלא את כל השדות הנדרשים: שם, תיאור, קטגוריה ומחיר");
+      // בדיקת וולידציה מקיפה לכל השדות
+      const validationErrors = [];
+
+      // בדיקת כל השדות הנדרשים
+      const nameError = validateField("name", currentProduct?.name);
+      if (nameError) validationErrors.push(nameError);
+
+      const descriptionError = validateField(
+        "description",
+        currentProduct?.description
+      );
+      if (descriptionError) validationErrors.push(descriptionError);
+
+      const priceError = validateField("price", currentProduct?.price);
+      if (priceError) validationErrors.push(priceError);
+
+      const categoryError = validateField("category", currentProduct?.category);
+      if (categoryError) validationErrors.push(categoryError);
+
+      const stockError = validateField(
+        "stockQuantity",
+        currentProduct?.stockQuantity
+      );
+      if (stockError) validationErrors.push(stockError);
+
+      const discountError = validateField("discount", currentProduct?.discount);
+      if (discountError) validationErrors.push(discountError);
+
+      if (validationErrors.length > 0) {
+        setError(
+          `נמצאו ${
+            validationErrors.length
+          } שגיאות וולידציה:\n\n${validationErrors.join("\n")}`
+        );
         return;
       }
 
       // Prepare product data - ensure all fields are converted to the right format
       const productData = {
-        name: currentProduct.name,
-        category: currentProduct.category,
+        name: currentProduct.name || "",
+        category: currentProduct.category || "",
         description: currentProduct.description || "",
-        price: parseFloat(currentProduct.price),
-        stockQuantity: parseInt(currentProduct.stockQuantity || 0),
+        price:
+          parseFloat(currentProduct.price) >= 0
+            ? parseFloat(currentProduct.price)
+            : 0,
+        stockQuantity:
+          parseInt(currentProduct.stockQuantity) >= 0
+            ? parseInt(currentProduct.stockQuantity)
+            : 0,
         imageUrl: currentProduct.imageUrl || "",
         isActive:
-          currentProduct.isActive !== undefined
-            ? currentProduct.isActive
-            : true,
-        discount: parseFloat(currentProduct.discount || 0),
-        tags: currentProduct.tags || [],
+          currentProduct.isActive === true ||
+          currentProduct.isActive === "true",
+        discount:
+          parseFloat(currentProduct.discount) >= 0
+            ? parseFloat(currentProduct.discount)
+            : 0,
+        tags: (() => {
+          if (!currentProduct.tags) return [];
+          if (Array.isArray(currentProduct.tags)) return currentProduct.tags;
+          if (typeof currentProduct.tags === "string") {
+            return currentProduct.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0);
+          }
+          return [];
+        })(),
       };
 
-      // Debug logging
-      console.log("Product data before sending to API:", productData);
+      console.log("Sending product data to server:", productData);
+      console.log("Current product before processing:", currentProduct);
 
       let result;
       if (currentProduct._id) {
@@ -240,7 +392,6 @@ const Products = () => {
           ...currentProduct,
           imageUrl: result.imageUrl, // Use the correct property from the response
         });
-        console.log("Image uploaded successfully:", result.imageUrl);
       } else {
         throw new Error("קבלת URL התמונה נכשלה");
       }
@@ -282,6 +433,9 @@ const Products = () => {
               discount: 0,
               tags: [],
             });
+            setError("");
+            setSuccess("");
+            setFieldErrors({});
             setOpenDialog(true);
           }}
           disabled={loading}
@@ -392,66 +546,64 @@ const Products = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {products
-                .slice(0, rowsPerPage)
-                .map((product) => (
-                  <TableRow key={product._id}>
-                    <TableCell align="right">
-                      {product.imageUrl ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          style={{ width: 50, height: 50, objectFit: "cover" }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: 50,
-                            height: 50,
-                            backgroundColor: "#f0f0f0",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "12px",
-                          }}
-                        >
-                          אין תמונה
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell align="right">{product.name}</TableCell>
-                    <TableCell align="right">{product.category}</TableCell>
-                    <TableCell align="right">
-                      {displayPrice(product.price, product.discount)}
-                    </TableCell>
-                    <TableCell align="right">{product.stockQuantity}</TableCell>
-                    <TableCell align="right">
-                      <Chip
-                        label={product.isActive ? "פעיל" : "לא פעיל"}
-                        color={product.isActive ? "success" : "default"}
-                        size="small"
+              {products.slice(0, rowsPerPage).map((product) => (
+                <TableRow key={product._id}>
+                  <TableCell align="right">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        style={{ width: 50, height: 50, objectFit: "cover" }}
                       />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleEditClick(product)}
-                          size="small"
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteProduct(product._id)}
-                          size="small"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                    ) : (
+                      <div
+                        style={{
+                          width: 50,
+                          height: 50,
+                          backgroundColor: "#f0f0f0",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                        }}
+                      >
+                        אין תמונה
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">{product.name}</TableCell>
+                  <TableCell align="right">{product.category}</TableCell>
+                  <TableCell align="right">
+                    {displayPrice(product.price, product.discount)}
+                  </TableCell>
+                  <TableCell align="right">{product.stockQuantity}</TableCell>
+                  <TableCell align="right">
+                    <Chip
+                      label={product.isActive ? "פעיל" : "לא פעיל"}
+                      color={product.isActive ? "success" : "default"}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleEditClick(product)}
+                        size="small"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDeleteProduct(product._id)}
+                        size="small"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -678,24 +830,24 @@ const Products = () => {
                         fontFamily: "inherit",
                       }}
                     >
-                      שם המוצר *
+                      שם המוצר <span style={{ color: "#f44336" }}>*</span>
                     </label>
                     <input
                       type="text"
                       value={currentProduct?.name || ""}
                       onChange={(e) =>
-                        setCurrentProduct({
-                          ...currentProduct,
-                          name: e.target.value,
-                        })
+                        handleFieldChange("name", e.target.value)
                       }
                       disabled={loading}
+                      placeholder="הזן שם מוצר (2-100 תווים)"
                       style={{
                         width: "100%",
                         height: "64px",
                         padding: "0 16px",
                         fontSize: "16px",
-                        border: "1px solid #ccc",
+                        border: `1px solid ${
+                          fieldErrors.name ? "#f44336" : "#ccc"
+                        }`,
                         borderRadius: "8px",
                         outline: "none",
                         fontFamily: "inherit",
@@ -705,14 +857,44 @@ const Products = () => {
                         transition: "border-color 0.2s, box-shadow 0.2s",
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
+                        e.target.style.borderColor = fieldErrors.name
+                          ? "#f44336"
+                          : theme.palette.primary.main;
+                        e.target.style.boxShadow = `0 0 0 1px ${
+                          fieldErrors.name
+                            ? "#f44336"
+                            : theme.palette.primary.main
+                        }`;
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "#ccc";
+                        e.target.style.borderColor = fieldErrors.name
+                          ? "#f44336"
+                          : "#ccc";
                         e.target.style.boxShadow = "none";
                       }}
                     />
+                    {fieldErrors.name && (
+                      <Typography
+                        sx={{
+                          color: "error.main",
+                          fontSize: "0.875rem",
+                          mt: 1,
+                        }}
+                      >
+                        {fieldErrors.name}
+                      </Typography>
+                    )}
+                    {/* מונה תווים לשם המוצר */}
+                    <Typography
+                      sx={{
+                        fontSize: "0.75rem",
+                        color: "text.secondary",
+                        mt: 0.5,
+                        textAlign: "left",
+                      }}
+                    >
+                      {(currentProduct?.name || "").length}/100 תווים
+                    </Typography>
                   </div>
 
                   {/* קטגוריה */}
@@ -727,15 +909,12 @@ const Products = () => {
                         fontFamily: "inherit",
                       }}
                     >
-                      קטגוריה *
+                      קטגוריה <span style={{ color: "#f44336" }}>*</span>
                     </label>
                     <select
                       value={currentProduct?.category || ""}
                       onChange={(e) =>
-                        setCurrentProduct({
-                          ...currentProduct,
-                          category: e.target.value,
-                        })
+                        handleFieldChange("category", e.target.value)
                       }
                       disabled={loading}
                       style={{
@@ -743,7 +922,9 @@ const Products = () => {
                         height: "64px",
                         padding: "0 16px",
                         fontSize: "16px",
-                        border: "1px solid #ccc",
+                        border: `1px solid ${
+                          fieldErrors.category ? "#f44336" : "#ccc"
+                        }`,
                         borderRadius: "8px",
                         outline: "none",
                         fontFamily: "inherit",
@@ -753,11 +934,19 @@ const Products = () => {
                         transition: "border-color 0.2s, box-shadow 0.2s",
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
+                        e.target.style.borderColor = fieldErrors.category
+                          ? "#f44336"
+                          : theme.palette.primary.main;
+                        e.target.style.boxShadow = `0 0 0 1px ${
+                          fieldErrors.category
+                            ? "#f44336"
+                            : theme.palette.primary.main
+                        }`;
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "#ccc";
+                        e.target.style.borderColor = fieldErrors.category
+                          ? "#f44336"
+                          : "#ccc";
                         e.target.style.boxShadow = "none";
                       }}
                     >
@@ -768,6 +957,17 @@ const Products = () => {
                         </option>
                       ))}
                     </select>
+                    {fieldErrors.category && (
+                      <Typography
+                        sx={{
+                          color: "error.main",
+                          fontSize: "0.875rem",
+                          mt: 1,
+                        }}
+                      >
+                        {fieldErrors.category}
+                      </Typography>
+                    )}
                   </div>
 
                   {/* מחיר וכמות */}
@@ -789,24 +989,26 @@ const Products = () => {
                           fontFamily: "inherit",
                         }}
                       >
-                        מחיר (₪) *
+                        מחיר (₪) <span style={{ color: "#f44336" }}>*</span>
                       </label>
                       <input
                         type="number"
                         value={currentProduct?.price || ""}
                         onChange={(e) =>
-                          setCurrentProduct({
-                            ...currentProduct,
-                            price: parseFloat(e.target.value) || 0,
-                          })
+                          handleFieldChange("price", e.target.value)
                         }
                         disabled={loading}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
                         style={{
                           width: "100%",
                           height: "64px",
                           padding: "0 16px",
                           fontSize: "16px",
-                          border: "1px solid #ccc",
+                          border: `1px solid ${
+                            fieldErrors.price ? "#f44336" : "#ccc"
+                          }`,
                           borderRadius: "8px",
                           outline: "none",
                           fontFamily: "inherit",
@@ -816,15 +1018,33 @@ const Products = () => {
                           transition: "border-color 0.2s, box-shadow 0.2s",
                         }}
                         onFocus={(e) => {
-                          e.target.style.borderColor =
-                            theme.palette.primary.main;
-                          e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
+                          e.target.style.borderColor = fieldErrors.price
+                            ? "#f44336"
+                            : theme.palette.primary.main;
+                          e.target.style.boxShadow = `0 0 0 1px ${
+                            fieldErrors.price
+                              ? "#f44336"
+                              : theme.palette.primary.main
+                          }`;
                         }}
                         onBlur={(e) => {
-                          e.target.style.borderColor = "#ccc";
+                          e.target.style.borderColor = fieldErrors.price
+                            ? "#f44336"
+                            : "#ccc";
                           e.target.style.boxShadow = "none";
                         }}
                       />
+                      {fieldErrors.price && (
+                        <Typography
+                          sx={{
+                            color: "error.main",
+                            fontSize: "0.875rem",
+                            mt: 1,
+                          }}
+                        >
+                          {fieldErrors.price}
+                        </Typography>
+                      )}
                     </div>
 
                     <div>
@@ -844,18 +1064,19 @@ const Products = () => {
                         type="number"
                         value={currentProduct?.stockQuantity || ""}
                         onChange={(e) =>
-                          setCurrentProduct({
-                            ...currentProduct,
-                            stockQuantity: parseInt(e.target.value) || 0,
-                          })
+                          handleFieldChange("stockQuantity", e.target.value)
                         }
                         disabled={loading}
+                        placeholder="0"
+                        min="0"
                         style={{
                           width: "100%",
                           height: "64px",
                           padding: "0 16px",
                           fontSize: "16px",
-                          border: "1px solid #ccc",
+                          border: `1px solid ${
+                            fieldErrors.stockQuantity ? "#f44336" : "#ccc"
+                          }`,
                           borderRadius: "8px",
                           outline: "none",
                           fontFamily: "inherit",
@@ -865,15 +1086,33 @@ const Products = () => {
                           transition: "border-color 0.2s, box-shadow 0.2s",
                         }}
                         onFocus={(e) => {
-                          e.target.style.borderColor =
-                            theme.palette.primary.main;
-                          e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
+                          e.target.style.borderColor = fieldErrors.stockQuantity
+                            ? "#f44336"
+                            : theme.palette.primary.main;
+                          e.target.style.boxShadow = `0 0 0 1px ${
+                            fieldErrors.stockQuantity
+                              ? "#f44336"
+                              : theme.palette.primary.main
+                          }`;
                         }}
                         onBlur={(e) => {
-                          e.target.style.borderColor = "#ccc";
+                          e.target.style.borderColor = fieldErrors.stockQuantity
+                            ? "#f44336"
+                            : "#ccc";
                           e.target.style.boxShadow = "none";
                         }}
                       />
+                      {fieldErrors.stockQuantity && (
+                        <Typography
+                          sx={{
+                            color: "error.main",
+                            fontSize: "0.875rem",
+                            mt: 1,
+                          }}
+                        >
+                          {fieldErrors.stockQuantity}
+                        </Typography>
+                      )}
                     </div>
                   </div>
 
@@ -902,18 +1141,20 @@ const Products = () => {
                         type="number"
                         value={currentProduct?.discount || ""}
                         onChange={(e) =>
-                          setCurrentProduct({
-                            ...currentProduct,
-                            discount: parseFloat(e.target.value) || 0,
-                          })
+                          handleFieldChange("discount", e.target.value)
                         }
                         disabled={loading}
+                        placeholder="0"
+                        min="0"
+                        max="100"
                         style={{
                           width: "100%",
                           height: "64px",
                           padding: "0 16px",
                           fontSize: "16px",
-                          border: "1px solid #ccc",
+                          border: `1px solid ${
+                            fieldErrors.discount ? "#f44336" : "#ccc"
+                          }`,
                           borderRadius: "8px",
                           outline: "none",
                           fontFamily: "inherit",
@@ -923,15 +1164,33 @@ const Products = () => {
                           transition: "border-color 0.2s, box-shadow 0.2s",
                         }}
                         onFocus={(e) => {
-                          e.target.style.borderColor =
-                            theme.palette.primary.main;
-                          e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
+                          e.target.style.borderColor = fieldErrors.discount
+                            ? "#f44336"
+                            : theme.palette.primary.main;
+                          e.target.style.boxShadow = `0 0 0 1px ${
+                            fieldErrors.discount
+                              ? "#f44336"
+                              : theme.palette.primary.main
+                          }`;
                         }}
                         onBlur={(e) => {
-                          e.target.style.borderColor = "#ccc";
+                          e.target.style.borderColor = fieldErrors.discount
+                            ? "#f44336"
+                            : "#ccc";
                           e.target.style.boxShadow = "none";
                         }}
                       />
+                      {fieldErrors.discount && (
+                        <Typography
+                          sx={{
+                            color: "error.main",
+                            fontSize: "0.875rem",
+                            mt: 1,
+                          }}
+                        >
+                          {fieldErrors.discount}
+                        </Typography>
+                      )}
                     </div>
 
                     <div>
@@ -954,10 +1213,7 @@ const Products = () => {
                             : true
                         }
                         onChange={(e) =>
-                          setCurrentProduct({
-                            ...currentProduct,
-                            isActive: e.target.value === "true",
-                          })
+                          handleFieldChange("isActive", e.target.value)
                         }
                         disabled={loading}
                         style={{
@@ -1002,15 +1258,12 @@ const Products = () => {
                         fontFamily: "inherit",
                       }}
                     >
-                      תיאור המוצר *
+                      תיאור המוצר <span style={{ color: "#f44336" }}>*</span>
                     </label>
                     <textarea
                       value={currentProduct?.description || ""}
                       onChange={(e) =>
-                        setCurrentProduct({
-                          ...currentProduct,
-                          description: e.target.value,
-                        })
+                        handleFieldChange("description", e.target.value)
                       }
                       disabled={loading}
                       rows={4}
@@ -1019,7 +1272,9 @@ const Products = () => {
                         width: "100%",
                         padding: "16px",
                         fontSize: "16px",
-                        border: "1px solid #ccc",
+                        border: `1px solid ${
+                          fieldErrors.description ? "#f44336" : "#ccc"
+                        }`,
                         borderRadius: "8px",
                         outline: "none",
                         fontFamily: "inherit",
@@ -1031,14 +1286,44 @@ const Products = () => {
                         minHeight: "120px",
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = theme.palette.primary.main;
-                        e.target.style.boxShadow = `0 0 0 1px ${theme.palette.primary.main}`;
+                        e.target.style.borderColor = fieldErrors.description
+                          ? "#f44336"
+                          : theme.palette.primary.main;
+                        e.target.style.boxShadow = `0 0 0 1px ${
+                          fieldErrors.description
+                            ? "#f44336"
+                            : theme.palette.primary.main
+                        }`;
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = "#ccc";
+                        e.target.style.borderColor = fieldErrors.description
+                          ? "#f44336"
+                          : "#ccc";
                         e.target.style.boxShadow = "none";
                       }}
                     />
+                    {fieldErrors.description && (
+                      <Typography
+                        sx={{
+                          color: "error.main",
+                          fontSize: "0.875rem",
+                          mt: 1,
+                        }}
+                      >
+                        {fieldErrors.description}
+                      </Typography>
+                    )}
+                    {/* מונה תווים לתיאור המוצר */}
+                    <Typography
+                      sx={{
+                        fontSize: "0.75rem",
+                        color: "text.secondary",
+                        mt: 0.5,
+                        textAlign: "left",
+                      }}
+                    >
+                      {(currentProduct?.description || "").length}/5000 תווים
+                    </Typography>
                   </div>
 
                   {/* תגיות */}
@@ -1057,22 +1342,24 @@ const Products = () => {
                     </label>
                     <input
                       type="text"
-                      value={currentProduct?.tags?.join(", ") || ""}
+                      value={
+                        Array.isArray(currentProduct?.tags)
+                          ? currentProduct.tags.join(", ")
+                          : currentProduct?.tags || ""
+                      }
                       onChange={(e) =>
-                        setCurrentProduct({
-                          ...currentProduct,
-                          tags: e.target.value
-                            .split(",")
-                            .map((tag) => tag.trim()),
-                        })
+                        handleFieldChange("tags", e.target.value)
                       }
                       onBlur={(e) => {
+                        const tagsValue = e.target.value || "";
                         setCurrentProduct({
                           ...currentProduct,
-                          tags: e.target.value
-                            .split(",")
-                            .map((tag) => tag.trim())
-                            .filter((tag) => tag !== ""),
+                          tags: tagsValue
+                            ? tagsValue
+                                .split(",")
+                                .map((tag) => tag.trim())
+                                .filter((tag) => tag !== "")
+                            : [],
                         });
                         e.target.style.borderColor = "#ccc";
                         e.target.style.boxShadow = "none";
@@ -1100,33 +1387,56 @@ const Products = () => {
                     />
 
                     {/* הצגת תגיות */}
-                    {currentProduct?.tags && currentProduct.tags.length > 0 && (
-                      <div
-                        style={{
-                          marginTop: "16px",
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "8px",
-                        }}
-                      >
-                        {currentProduct.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            style={{
-                              padding: "6px 12px",
-                              backgroundColor: "#e3f2fd",
-                              color: "#1976d2",
-                              border: "1px solid #1976d2",
-                              borderRadius: "16px",
-                              fontSize: "14px",
-                              fontWeight: "500",
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {currentProduct &&
+                      (() => {
+                        const tags = Array.isArray(currentProduct.tags)
+                          ? currentProduct.tags
+                          : currentProduct.tags &&
+                            typeof currentProduct.tags === "string"
+                          ? currentProduct.tags
+                              .split(",")
+                              .map((tag) => tag.trim())
+                              .filter((tag) => tag)
+                          : [];
+                        return tags.length > 0;
+                      })() && (
+                        <div
+                          style={{
+                            marginTop: "16px",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                          }}
+                        >
+                          {(() => {
+                            const tags = Array.isArray(currentProduct.tags)
+                              ? currentProduct.tags
+                              : currentProduct.tags &&
+                                typeof currentProduct.tags === "string"
+                              ? currentProduct.tags
+                                  .split(",")
+                                  .map((tag) => tag.trim())
+                                  .filter((tag) => tag)
+                              : [];
+                            return tags;
+                          })().map((tag, index) => (
+                            <span
+                              key={index}
+                              style={{
+                                padding: "6px 12px",
+                                backgroundColor: "#e3f2fd",
+                                color: "#1976d2",
+                                border: "1px solid #1976d2",
+                                borderRadius: "16px",
+                                fontSize: "14px",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -1143,8 +1453,8 @@ const Products = () => {
             position: "sticky",
             bottom: 0,
             zIndex: 1,
-            flexDirection: 'row-reverse',
-            justifyContent: 'start'
+            flexDirection: "row-reverse",
+            justifyContent: "start",
           }}
         >
           <Button

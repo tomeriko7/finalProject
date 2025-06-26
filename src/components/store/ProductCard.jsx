@@ -110,6 +110,11 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             height: "auto",
             transition: "all 0.3s ease",
             direction: "rtl",
+            textAlign: "right",
+            "& *": {
+              direction: "rtl",
+              textAlign: "right",
+            },
             "&:hover": {
               boxShadow: 4,
               transform: "translateY(-2px)",
@@ -165,12 +170,21 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
           </Box>
 
           <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
-            <CardContent sx={{ flex: 1 }}>
+            <CardContent sx={{ 
+              flex: 1, 
+              direction: "rtl", 
+              textAlign: "right" 
+            }}>
               <Typography
                 variant="h6"
                 component="h3"
                 gutterBottom
-                sx={{ textAlign: "right" }}
+                sx={{ 
+                  textAlign: "right !important",
+                  direction: "rtl !important",
+                  width: "100%",
+                  display: "block"
+                }}
               >
                 {product.name}
               </Typography>
@@ -180,7 +194,8 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                 color="text.secondary"
                 sx={{
                   mb: 2,
-                  textAlign: "right",
+                  textAlign: "right !important",
+                  direction: "rtl !important",
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
@@ -195,7 +210,8 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                   display: "flex",
                   alignItems: "center",
                   mb: 1,
-                  justifyContent: "flex-end",
+                  justifyContent: "flex-start",
+                  direction: "rtl",
                 }}
               >
                 <Typography
@@ -213,7 +229,8 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                   display: "flex",
                   alignItems: "center",
                   gap: 1,
-                  justifyContent: "flex-end",
+                  justifyContent: "flex-start",
+                  direction: "rtl",
                 }}
               >
                 <Typography variant="h6" color="primary" fontWeight="bold">
@@ -235,7 +252,12 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               </Box>
             </CardContent>
 
-            <CardActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
+            <CardActions sx={{ 
+              justifyContent: "space-between", 
+              px: 2, 
+              pb: 2,
+              direction: "rtl" 
+            }}>
               <Button
                 variant="contained"
                 startIcon={<ShoppingCartIcon />}
@@ -314,19 +336,25 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                     <Typography variant="h5" color="primary" fontWeight="bold">
                       {formatPrice(product.price)}
                     </Typography>
-                    {hasDiscount && originalPrice && (
-                      <>
-                        <Typography variant="body1" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
-                          {formatPrice(originalPrice)}
-                        </Typography>
-                        <Chip
-                          label={`הנחה ${product.discount}%`}
-                          color="error"
-                          size="small"
-                          sx={{ fontWeight: 'bold' }}
-                        />
-                      </>
-                    )}
+                    {hasDiscount &&
+                      originalPrice &&
+                      originalPrice > product.price && (
+                        <>
+                          <Typography
+                            variant="body1"
+                            color="text.secondary"
+                            sx={{ textDecoration: 'line-through' }}
+                          >
+                            {formatPrice(originalPrice)}
+                          </Typography>
+                          <Chip
+                            label={`הנחה ${product.discount}%`}
+                            color="error"
+                            size="small"
+                            sx={{ fontWeight: 'bold' }}
+                          />
+                        </>
+                      )}
                   </Box>
                   
                   {product.stockQuantity > 0 ? (
@@ -402,18 +430,21 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
     <>
       <Card
         sx={{
-          height: "100%",
           display: "flex",
           flexDirection: "column",
           width: "100%",
           direction: "rtl",
+          textAlign: "right",
+          "& *": {
+            direction: "rtl",
+            textAlign: "right",
+          },
           transition: "all 0.3s ease",
           "&:hover": {
             transform: "translateY(-8px)",
-            boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
+            boxShadow: 6,
           },
           opacity: isOutOfStock ? 0.7 : 1,
-          position: "relative",
         }}
       >
         <Box sx={{ position: "relative" }}>
@@ -525,7 +556,9 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            minHeight: 0,
+            minHeight:0,
+            direction: "rtl",
+            textAlign: "right",
           }}
         >
           <Box>
@@ -535,7 +568,8 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               sx={{
                 fontWeight: "bold",
                 mb: 1,
-                textAlign: "right",
+                textAlign: "right !important",
+                direction: "rtl !important",
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
@@ -552,12 +586,13 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               color="text.secondary"
               sx={{
                 mb: 2,
-                textAlign: "right",
+                textAlign: "right !important",
+                direction: "rtl !important",
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                height: "4.5em",
+                height: "3.5em",
                 lineHeight: 1.5,
               }}
             >
@@ -620,17 +655,26 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             p: 0,
             height: "60px",
             flexShrink: 0,
-            direction: "ltr",
+            direction: "rtl",
+            display: "flex",
           }}
         >
           <Button
             size="small"
-            startIcon={<VisibilityIcon />}
+            endIcon={<VisibilityIcon sx={{ fontSize: '1rem', mr: 0.5 }} />}
             onClick={handleOpenDialog}
             sx={{
               flex: 1,
               borderRadius: 0,
               py: 1.5,
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              "& .MuiButton-endIcon": {
+                marginLeft: "4px",
+                marginRight: "0px",
+              },
               "&:hover": {
                 backgroundColor: "action.hover",
               },
@@ -639,17 +683,32 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
             צפה
           </Button>
 
+          <Divider 
+            orientation="vertical" 
+            flexItem 
+            sx={{ 
+              borderColor: "divider",
+              borderWidth: 1
+            }} 
+          />
+
           <Button
             size="small"
-            startIcon={<ShoppingCartIcon />}
+            endIcon={<ShoppingCartIcon sx={{ fontSize: '1rem', mr: 0.5 }} />}
             onClick={handleAddToCart}
             disabled={isOutOfStock}
             sx={{
               flex: 1,
               borderRadius: 0,
-              borderLeft: "1px solid",
-              borderColor: "divider",
               py: 1.5,
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              "& .MuiButton-endIcon": {
+                marginLeft: "4px",
+                marginRight: "0px",
+              },
               "&:hover": {
                 backgroundColor: "primary.main",
                 color: "white",

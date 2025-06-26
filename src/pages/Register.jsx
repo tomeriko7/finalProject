@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
 import { authAPI, handleApiError } from "../api/api";
+import { AuthContext } from "../services/AuthContext";
 import styles from "../styles/formStyles";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   // State עבור Snackbar
   const [snackbar, setSnackbar] = useState({
@@ -102,8 +104,25 @@ const Register = () => {
       newErrors.email = "פורמט אימייל לא תקין";
     }
 
-    if (formData.password && formData.password.length < 6) {
-      newErrors.password = "הסיסמה חייבת להכיל לפחות 6 תווים";
+    // בדיקת אורך מינימלי 8 תווים
+    if (formData.password && formData.password.length < 8) {
+      newErrors.password = "הסיסמה חייבת להכיל לפחות 8 תווים";
+    } 
+    
+    // בדיקת מורכבות הסיסמה לפי הדרישות
+    if (formData.password && !newErrors.password) {
+      // בדיקת אות גדולה אחת לפחות
+      const hasUpperCase = /[A-Z]/.test(formData.password);
+      // בדיקת אות קטנה אחת לפחות
+      const hasLowerCase = /[a-z]/.test(formData.password);
+      // בדיקת לפחות 4 מספרים
+      const hasEnoughNumbers = (formData.password.match(/[0-9]/g) || []).length >= 4;
+      // בדיקת תו מיוחד אחד לפחות מתוך הרשימה
+      const hasSpecialChar = /[!@#$%^&*]/.test(formData.password);
+      
+      if (!(hasUpperCase && hasLowerCase && hasEnoughNumbers && hasSpecialChar)) {
+        newErrors.password = "הסיסמה חייבת להכיל לפחות: אות אנגלית גדולה אחת, אות אנגלית קטנה אחת, 4 ספרות, סימן מיוחד (!@#$%^&*) ולפחות 8 תווים";
+      }
     }
     if (formData.address.zipCode && formData.address.zipCode.length < 7) {
       newErrors.address.zipCode = " המיקוד חייב להכיל לפחות 7 תווים";
@@ -143,14 +162,10 @@ const Register = () => {
         // הצג הודעת הצלחה
         showSnackbar("🎉 נרשמת בהצלחה! מעביר לדף הבית...");
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        // ניווט לדף הבית אחרי 2 שניות
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
-
+        // שימוש ב-AuthContext במקום localStorage ישיר
+        login(data.user, data.token);
+        
+        // מחיקת נתוני הטופס
         setFormData({
           firstName: "",
           lastName: "",
@@ -161,6 +176,15 @@ const Register = () => {
           address: { street: "", city: "", zipCode: "" },
           preferences: { newsletter: true, smsNotifications: false },
         });
+
+        // ניווט לדף הבית באופן מיידי
+        console.log("Auto login status:", data.autoLogin);
+        
+        // לוודא שהניווט יקרה בכל מקרה של הרשמה מוצלחת
+        setTimeout(() => {
+         
+          navigate("/", { replace: true });
+        }, 2000);  
       }
     } catch (error) {
       const errorMessage = handleApiError(error);

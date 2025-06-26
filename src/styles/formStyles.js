@@ -46,16 +46,7 @@ backgroundRepeat: "no-repeat",
 backgroundPosition: "center",
 backgroundRepeat: "no-repeat",
   },
-  contactContainer:{
-    minHeight: "50vh",
-    background: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(41, 37, 50) 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "20px",
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  },
+  
   card: {
     maxWidth: "600px",
     width: "100%",

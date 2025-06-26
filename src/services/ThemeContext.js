@@ -43,6 +43,7 @@ const theme = useMemo(
       },
       typography: {
         fontFamily: '"Assistant", sans-serif',
+        
       },
       custom: {
         navbar: mode === "dark" ? "#1c1c1c" : "rgba(117, 117, 117, 0.1)",

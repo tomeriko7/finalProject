@@ -1,5 +1,7 @@
 import express from 'express';
 import { protect, admin, optionalAuth } from '../middleware/authMiddleware.js';
+import { validateWithJoi } from '../middleware/validationMiddleware.js';
+import { createProductSchema, updateProductSchema, updateStockSchema, productReviewSchema } from '../validations/productValidation.js';
 import {
   createProduct,
   getProducts,
@@ -20,7 +22,7 @@ router.get('/top', getTopProducts);
 router.get('/:id', getProductById);
 
 // Protected routes (require authentication)
-router.post('/:id/reviews', protect, createProductReview);
+router.post('/:id/reviews', protect, validateWithJoi(productReviewSchema), createProductReview);
 
 // Admin routes (require admin privileges)
 // Product creation route with proper multer configuration
@@ -35,7 +37,7 @@ router.post(
     console.log('Content-Type:', req.headers['content-type']);
     next();
   },
-  
+  validateWithJoi(createProductSchema),
   createProduct
 );
 
@@ -44,6 +46,7 @@ router.put(
   protect, 
   admin, 
   upload.single('image'), 
+  validateWithJoi(updateProductSchema),
   updateProduct
 );
 
@@ -51,6 +54,7 @@ router.put(
   '/:id/stock',
   protect,
   admin,
+  validateWithJoi(updateStockSchema),
   updateProductStock
 );
 

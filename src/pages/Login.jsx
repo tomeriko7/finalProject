@@ -138,7 +138,7 @@ const Login = () => {
 
           <button
             type="submit"
-            onClick={() => console.log("👑 נלחץ על התחבר")}
+            
             disabled={loading}
             style={{
               ...styles.submitButton,

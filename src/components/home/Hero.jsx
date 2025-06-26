@@ -3,75 +3,101 @@ import { Box, Container, Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../services/AuthContext";
 
+import herovideo1 from "../../assets/images/herovideo1.mp4";
+import herovideo2 from "../../assets/images/herovideo2.mp4";
+import herovideo3 from "../../assets/images/herovideo3.mp4";
+import herovideo4 from "../../assets/images/herovideo4.mp4";
 
-const images = [
-  "https://images.pexels.com/photos/39351/purple-grapes-vineyard-napa-valley-napa-vineyard-39351.jpeg",
-  "https://cdn.pixabay.com/photo/2014/05/30/01/09/figs-357683_1280.jpg",
-  "https://cdn.pixabay.com/photo/2017/11/01/17/17/olive-2908688_1280.jpg",
-];
+const videos = [herovideo1, herovideo2, herovideo3, herovideo4];
 
 export const Hero = () => {
-  const {user} = useContext(AuthContext)
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const handleShopClick = () =>{
-    if (user) {
-      navigate("/store")
-    } else {
-      navigate("/login")
-    }
-  }
+  const [prevIndex, setPrevIndex] = useState(null);
+  const [isFading, setIsFading] = useState(false);
+
+  const handleShopClick = () => {
+    navigate(user ? "/store" : "/login");
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 6000); // כל 6 שניות
+      setPrevIndex(currentIndex);
+      setCurrentIndex((prev) => (prev + 1) % videos.length);
+      setIsFading(true);
+      setTimeout(() => setIsFading(false), 1800); // מעבר חלק יותר
+    }, 8000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentIndex]);
 
   return (
-    <Box sx={{ position: "relative", height: "40vh", color: "white", overflow: "hidden" }}>
-      {/* רקעים מתחלפים */}
-      {images.map((img, index) => (
-        <Box
-          key={index}
-          sx={{
-            backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0)), url(${img})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+    <Box
+      sx={{
+        position: "relative",
+        height: "40vh",
+        overflow: "hidden",
+        color: "white",
+      }}
+    >
+      {/* וידאו קודם */}
+      {prevIndex !== null && (
+        <video
+          key={`video-${prevIndex}`}
+          src={videos[prevIndex]}
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{
             position: "absolute",
             top: 0,
             left: 0,
             width: "100%",
             height: "100%",
-            opacity: index === currentIndex ? 1 : 0,
-            filter: index === currentIndex ? "blur(0px)" : "blur(6px)",
-            transition: "opacity 1.8s ease-in-out, filter 1.8s ease-in-out",
+            objectFit: "cover",
+            opacity: isFading ? 0 : 1,
+            transition: "opacity 1.8s ease-in-out",
             zIndex: 0,
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.45)",
-              zIndex: 1,
-            },
-            "&::after": {
-              content: '""',
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: "30%",
-              background: "linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent)",
-              zIndex: 2,
-            },
           }}
         />
-      ))}
+      )}
 
-      {/* תוכן */}
+      {/* וידאו נוכחי */}
+      <video
+        key={`video-${currentIndex}`}
+        src={videos[currentIndex]}
+        autoPlay
+        muted
+        loop
+        playsInline
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: 1,
+          transition: "opacity 1.8s ease-in-out",
+          zIndex: 1,
+        }}
+      />
+
+      {/* שכבת צבע כהה חצי-שקופה */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background: "rgba(0, 0, 0, 0.4)",
+          zIndex: 2,
+        }}
+      />
+
+      {/* תוכן על הווידאו */}
       <Container
         sx={{
           position: "relative",
@@ -115,7 +141,8 @@ export const Hero = () => {
             },
           }}
         >
-          במשתלת "הטנא" תוכלו למלא את הסל משפע הארץ עם שתילים מובחרים משבעת המינים, לצד מבחר ריחני של עשבי תבלין. בואו לטעת בגינתכם טעם והוד של מסורת
+          במשתלת "הטנא" תוכלו למלא את הסל משפע הארץ עם שתילים מובחרים משבעת המינים,
+          לצד מבחר ריחני של עשבי תבלין. בואו לטעת בגינתכם טעם והוד של מסורת.
         </Typography>
 
         <Box
@@ -129,7 +156,7 @@ export const Hero = () => {
           }}
         >
           <Button
-          onClick={handleShopClick}
+            onClick={handleShopClick}
             variant="contained"
             color="primary"
             size="large"
@@ -149,7 +176,7 @@ export const Hero = () => {
             לרכישה באתר
           </Button>
           <Button
-          href="/about"
+            href="/about"
             variant="contained"
             size="large"
             sx={{

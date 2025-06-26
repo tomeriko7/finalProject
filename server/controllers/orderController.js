@@ -1,5 +1,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import logger from '../utils/logger.js';
+import { safeMongooseSave } from '../middleware/validationMiddleware.js';
 
 // יצירת הזמנה חדשה
 const createOrder = async (req, res) => {
@@ -55,7 +57,8 @@ const createOrder = async (req, res) => {
       notes
     });
 
-    const savedOrder = await order.save();
+    const savedOrder = await safeMongooseSave(order, res, 'יצירת הזמנה');
+    if (!savedOrder) return;
 
     // יצירת מספר הזמנה מ-4 הספרות האחרונות של ה-ID
     const orderId = savedOrder._id.toString();
@@ -67,16 +70,31 @@ const createOrder = async (req, res) => {
 
     // עדכון מלאי המוצרים
     for (const item of items) {
-      await Product.findByIdAndUpdate(
+      const product = await Product.findByIdAndUpdate(
         item.product,
-        { $inc: { stock: -item.quantity } }
+        { $inc: { stock: -item.quantity } },
+        { new: true }
       );
+      logger.debug('Product stock updated', { 
+        productId: item.product, 
+        productName: item.name,
+        quantityDecreased: item.quantity,
+        remainingStock: product.stock
+      });
     }
 
     // החזרת ההזמנה עם פרטי המשתמש
     const populatedOrder = await Order.findById(savedOrder._id)
       .populate('user', 'firstName lastName email')
       .populate('items.product', 'name price imageUrl');
+      
+    logger.info('New order created', { 
+      orderId: populatedOrder._id, 
+      orderNumber: orderNumber,
+      userId: req.user.id,
+      total: total,
+      itemCount: items.length
+    });
 
     res.status(201).json({
       message: 'הזמנה נוצרה בהצלחה',
@@ -84,7 +102,12 @@ const createOrder = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating order:', error);
+    logger.error('Error creating order', { 
+      error: error.message, 
+      stack: error.stack,
+      userId: req.user?.id,
+      items: req.body?.items?.length
+    });
     res.status(500).json({ 
       message: 'שגיאה ביצירת ההזמנה',
       error: error.message 
@@ -119,7 +142,11 @@ const getUserOrders = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching user orders:', error);
+    logger.error('Error fetching user orders', { 
+      error: error.message, 
+      stack: error.stack,
+      userId: req.user?.id
+    });
     res.status(500).json({ 
       message: 'שגיאה בקבלת ההזמנות',
       error: error.message 
@@ -142,13 +169,29 @@ const getOrderById = async (req, res) => {
 
     // וידוא שהמשתמש רשאי לצפות בהזמנה
     if (order.user._id.toString() !== req.user.id && !req.user.isAdmin) {
+      logger.warn('Unauthorized order access attempt', { 
+        orderId: id,
+        requestUserId: req.user.id,
+        orderUserId: order.user._id.toString()
+      });
       return res.status(403).json({ message: 'אין הרשאה לצפות בהזמנה זו' });
     }
+    
+    logger.debug('Order fetched', { 
+      orderId: id, 
+      userId: req.user.id,
+      isAdmin: req.user.isAdmin
+    });
 
     res.json(order);
 
   } catch (error) {
-    console.error('Error fetching order:', error);
+    logger.error('Error fetching order by ID', { 
+      error: error.message, 
+      stack: error.stack,
+      orderId: req.params.id,
+      userId: req.user?.id
+    });
     res.status(500).json({ 
       message: 'שגיאה בקבלת ההזמנה',
       error: error.message 
@@ -160,7 +203,7 @@ const getOrderById = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, notes } = req.body;
+    const { status, statusNote } = req.body;
 
     // וידוא שהמשתמש הוא מנהל
     if (!req.user.isAdmin) {
@@ -172,27 +215,68 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: 'סטטוס לא תקין' });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      id,
-      { 
-        status,
-        ...(notes && { notes })
-      },
-      { new: true }
-    ).populate('user', 'firstName lastName email')
-     .populate('items.product', 'name price imageUrl');
-
-    if (!order) {
+    // קודם בדיקה שההזמנה קיימת
+    const orderExists = await Order.findById(id);
+    if (!orderExists) {
       return res.status(404).json({ message: 'הזמנה לא נמצאה' });
     }
 
-    res.json({
-      message: 'סטטוס ההזמנה עודכן בהצלחה',
-      order
-    });
+    // שמירת הסטטוס הקודם לצורך תיעוד
+    const previousStatus = orderExists.status;
+    
+    try {
+      // עדכון ההזמנה עם וולידציה
+      const order = await Order.findByIdAndUpdate(
+        id,
+        { 
+          status,
+          ...(statusNote && { statusNote })
+        },
+        { new: true, runValidators: true }
+      ).populate('user', 'firstName lastName email')
+       .populate('items.product', 'name price imageUrl');
+  
+      logger.info('Order status updated', { 
+        orderId: order._id, 
+        orderNumber: order.orderNumber,
+        previousStatus,
+        newStatus: status,
+        adminId: req.user.id
+      });
+      
+      // שימוש בפונקצית orderStatus המיוחדת לתיעוד שינויי סטטוס
+      logger.orderStatus(order._id, previousStatus, status, req.user.id);
+      
+      res.json({
+        message: 'סטטוס ההזמנה עודכן בהצלחה',
+        order
+      });
+    } catch (validationError) {
+      // טיפול בשגיאות וולידציה של מונגוס
+      if (validationError.name === 'ValidationError') {
+        const errors = Object.values(validationError.errors).map(err => err.message);
+        logger.error('Order validation error', { 
+          errors, 
+          orderId: id,
+          adminId: req.user?.id 
+        });
+        return res.status(400).json({ 
+          message: 'שגיאת וולידציה',
+          errors 
+        });
+      }
+      
+      // שגיאות אחרות
+      throw validationError;
+    }
 
   } catch (error) {
-    console.error('Error updating order status:', error);
+    logger.error('Error updating order status', { 
+      error: error.message, 
+      stack: error.stack,
+      orderId: req.params.id,
+      adminId: req.user?.id
+    });
     res.status(500).json({ 
       message: 'שגיאה בעדכון סטטוס ההזמנה',
       error: error.message 
@@ -250,7 +334,12 @@ const getAllOrders = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching all orders:', error);
+    logger.error('Error fetching all orders', { 
+      error: error.message, 
+      stack: error.stack,
+      adminId: req.user?.id,
+      filters: { status: req.query.status, search: req.query.search }
+    });
     res.status(500).json({ 
       message: 'שגיאה בקבלת ההזמנות',
       error: error.message 
@@ -285,10 +374,28 @@ const deleteOrder = async (req, res) => {
 
     await Order.findByIdAndDelete(id);
 
+    logger.info('Order deleted', { 
+      orderId: id, 
+      orderNumber: order.orderNumber,
+      adminId: req.user.id,
+      orderStatus: order.status
+    });
+    
+    // שימוש בפונקצית adminAction לתיעוד פעולת מנהל
+    logger.adminAction(req.user.id, 'delete_order', { 
+      orderId: id,
+      orderNumber: order.orderNumber
+    });
+
     res.json({ message: 'הזמנה נמחקה בהצלחה' });
 
   } catch (error) {
-    console.error('Error deleting order:', error);
+    logger.error('Error deleting order', { 
+      error: error.message, 
+      stack: error.stack,
+      orderId: req.params.id,
+      adminId: req.user?.id
+    });
     res.status(500).json({ 
       message: 'שגיאה במחיקת ההזמנה',
       error: error.message 
