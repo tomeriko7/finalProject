@@ -1,6 +1,6 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -16,21 +16,21 @@ import {
   Tooltip,
   Menu,
   Paper,
-} from '@mui/material';
-import { 
+} from "@mui/material";
+import {
   FavoriteBorder as FavoriteBorderIcon,
   Delete as DeleteIcon,
   Close as CloseIcon,
-  ShoppingCart as ShoppingCartIcon
-} from '@mui/icons-material';
-import { removeFromFavorites } from '../../store/slices/favoritesSlice';
-import { addToCart } from '../../store/slices/cartSlice';
+  ShoppingCart as ShoppingCartIcon,
+} from "@mui/icons-material";
+import { removeFromFavorites } from "../../store/slices/favoritesSlice";
+import { addToCart } from "../../store/slices/cartSlice";
 
 const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
   const { favorites, quantity } = useSelector((state) => state.favorites);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const isOpen = Boolean(anchorEl);
 
   const handleRemoveItem = (itemId) => {
@@ -64,54 +64,64 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
           },
         }}
       >
-        <Box sx={{ 
-          width: "100%", 
-          p: 2, 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column',
-          direction: "rtl"
-        }}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            mb: 2 
-          }}>
-            <Typography variant="h6" fontWeight="bold">המועדפים שלי</Typography>
+        <Box
+          sx={{
+            width: "100%",
+            p: 2,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            direction: "rtl",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
+            <Typography variant="h6" fontWeight="bold">
+              המועדפים שלי
+            </Typography>
             <IconButton onClick={handleClose}>
               <CloseIcon />
             </IconButton>
           </Box>
-          
+
           <Divider sx={{ mb: 2 }} />
-          
+
           {favorites.length === 0 ? (
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              height: '50%',
-              textAlign: 'center',
-              p: 3
-            }}>
-              <FavoriteBorderIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "50%",
+                textAlign: "center",
+                p: 3,
+              }}
+            >
+              <FavoriteBorderIcon
+                sx={{ fontSize: 60, color: "text.disabled", mb: 2 }}
+              />
               <Typography variant="h6" color="text.secondary">
                 אין לך עדיין פריטים מועדפים
               </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
+              <Button
+                variant="contained"
+                color="primary"
                 sx={{ mt: 2 }}
-                onClick={() => handleNavigate('/store')}
+                onClick={() => handleNavigate("/store")}
               >
                 המשך לקנות
               </Button>
             </Box>
           ) : (
             <>
-              <List sx={{ flexGrow: 1, overflow: 'auto' }}>
+              <List sx={{ flexGrow: 1, overflow: "auto" }}>
                 {favorites.map((item) => (
                   <React.Fragment key={item.id || item._id}>
                     <ListItem alignItems="flex-start">
@@ -122,27 +132,34 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                             height: 60,
                             mr: 1,
                             borderRadius: 1,
-                            bgcolor: 'background.paper',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            overflow: 'hidden',
-                            border: '1px solid',
-                            borderColor: 'divider'
+                            bgcolor: "background.paper",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            overflow: "hidden",
+                            border: "1px solid",
+                            borderColor: "divider",
                           }}
                         >
                           {item.imageUrl || item.image ? (
                             <img
                               src={item.imageUrl || item.image}
                               alt={item.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
                               onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = '/placeholder.png';
+                                e.target.src = "/placeholder.png";
                               }}
                             />
                           ) : (
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               אין תמונה
                             </Typography>
                           )}
@@ -150,22 +167,41 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                       </ListItemAvatar>
                       <ListItemText
                         primary={
-                          <Typography variant="subtitle1" fontWeight="medium" noWrap>
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight="medium"
+                            noWrap
+                          >
                             {item.name}
                           </Typography>
                         }
                         secondary={
                           <Box>
-                            <Typography component="span" variant="body2" color="primary.main" sx={{ display: 'block', fontWeight: 'bold' }}>
-                              ₪{item.price && item.price.toFixed ? item.price.toFixed(2) : item.price}
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="primary.main"
+                              sx={{ display: "block", fontWeight: "bold" }}
+                            >
+                              ₪
+                              {item.price && item.price.toFixed
+                                ? item.price.toFixed(2)
+                                : item.price}
                             </Typography>
                           </Box>
                         }
                       />
                       <ListItemSecondaryAction>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                        >
                           <Tooltip title="העבר לסל">
-                            <IconButton 
+                            <IconButton
                               size="small"
                               onClick={() => handleMoveToCart(item)}
                               sx={{ mb: 1 }}
@@ -174,9 +210,11 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="הסר מהמועדפים">
-                            <IconButton 
+                            <IconButton
                               size="small"
-                              onClick={() => handleRemoveItem(item.id || item._id)}
+                              onClick={() =>
+                                handleRemoveItem(item.id || item._id)
+                              }
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -188,24 +226,24 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                   </React.Fragment>
                 ))}
               </List>
-              
-              <Box sx={{ mt: 'auto', pt: 2 }}>
+
+              <Box sx={{ mt: "auto", pt: 2 }}>
                 <Button
                   variant="contained"
                   color="primary"
                   fullWidth
                   size="large"
                   sx={{ mb: 1 }}
-                  onClick={() => handleNavigate('/favorites')}
+                  onClick={() => handleNavigate("/favorites")}
                 >
                   צפייה בכל המועדפים
                 </Button>
-                
+
                 <Button
                   variant="outlined"
                   color="primary"
                   fullWidth
-                  onClick={() => handleNavigate('/store')}
+                  onClick={() => handleNavigate("/store")}
                 >
                   המשך לקנות
                 </Button>
@@ -224,12 +262,12 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
       open={isOpen}
       onClose={handleClose}
       anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'left',
+        vertical: "bottom",
+        horizontal: "left",
       }}
       transformOrigin={{
-        vertical: 'top',
-        horizontal: 'left',
+        vertical: "top",
+        horizontal: "left",
       }}
       PaperProps={{
         sx: {
@@ -243,46 +281,55 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
       }}
     >
       <Box sx={{ p: 2 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 2 
-        }}>
-          <Typography variant="h6" fontWeight="bold">המועדפים שלי</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexDirection: "row-reverse",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" >
+            המועדפים שלי
+          </Typography>
           <IconButton size="small" onClick={handleClose}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        
+
         <Divider sx={{ mb: 2 }} />
-        
+
         {favorites.length === 0 ? (
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            py: 4,
-            textAlign: 'center'
-          }}>
-            <FavoriteBorderIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              py: 4,
+              textAlign: "center",
+            }}
+          >
+            <FavoriteBorderIcon
+              sx={{ fontSize: 48, color: "text.disabled", mb: 2 }}
+            />
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
               אין לך עדיין פריטים מועדפים
             </Typography>
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               size="small"
-              onClick={() => handleNavigate('/store')}
+              onClick={() => handleNavigate("/store")}
             >
               המשך לקנות
             </Button>
           </Box>
         ) : (
           <>
-            <List sx={{ maxHeight: 300, overflow: 'auto', p: 0 }}>
-              {favorites.slice(0, 4).map((item) => (
+            <List sx={{ maxHeight: 300, overflow: "auto", p: 2 }}>
+              {favorites.map((item) => (
                 <React.Fragment key={item.id || item._id}>
                   <ListItem sx={{ px: 0, py: 1 }}>
                     <ListItemAvatar>
@@ -292,27 +339,35 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                           height: 50,
                           mr: 2,
                           borderRadius: 1,
-                          bgcolor: 'background.paper',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          overflow: 'hidden',
-                          border: '1px solid',
-                          borderColor: 'divider'
+                          bgcolor: "background.paper",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          overflow: "hidden",
+                          border: "1px solid",
+                          borderColor: "divider",
                         }}
                       >
                         {item.imageUrl || item.image ? (
                           <img
                             src={item.imageUrl || item.image}
                             alt={item.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
                             onError={(e) => {
                               e.target.onerror = null;
-                              e.target.src = '/placeholder.png';
+                              e.target.src = "/placeholder.png";
                             }}
                           />
                         ) : (
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontSize: "0.6rem" }}
+                          >
                             אין תמונה
                           </Typography>
                         )}
@@ -325,15 +380,30 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                         </Typography>
                       }
                       secondary={
-                        <Typography variant="caption" color="primary.main" fontWeight="bold">
-                          ₪{item.price && item.price.toFixed ? item.price.toFixed(2) : item.price}
+                        <Typography
+                          variant="caption"
+                          color="primary.main"
+                          fontWeight="bold"
+                        >
+                          ₪
+                          {item.price && item.price.toFixed
+                            ? item.price.toFixed(2)
+                            : item.price}
                         </Typography>
                       }
                     />
                     <ListItemSecondaryAction>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          position: "absolute",
+                          right: "60px",
+                        }}
+                      >
                         <Tooltip title="העבר לסל">
-                          <IconButton 
+                          <IconButton
                             size="small"
                             onClick={() => handleMoveToCart(item)}
                           >
@@ -341,9 +411,11 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="הסר מהמועדפים">
-                          <IconButton 
+                          <IconButton
                             size="small"
-                            onClick={() => handleRemoveItem(item.id || item._id)}
+                            onClick={() =>
+                              handleRemoveItem(item.id || item._id)
+                            }
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -351,36 +423,25 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                       </Box>
                     </ListItemSecondaryAction>
                   </ListItem>
-                  {favorites.indexOf(item) < Math.min(favorites.length - 1, 3) && (
+                  {favorites.indexOf(item) <
+                    Math.min(favorites.length - 1, 3) && (
                     <Divider variant="inset" />
                   )}
                 </React.Fragment>
               ))}
             </List>
+
             
-            {favorites.length > 4 && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
-                +{favorites.length - 4} פריטים נוספים
-              </Typography>
-            )}
-            
-            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                fullWidth
-                onClick={() => handleNavigate('/favorites')}
-              >
-                צפה בהכל
-              </Button>
+
+            <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
               
+
               <Button
                 variant="outlined"
                 color="primary"
                 size="small"
                 fullWidth
-                onClick={() => handleNavigate('/store')}
+                onClick={() => handleNavigate("/store")}
               >
                 המשך לקנות
               </Button>

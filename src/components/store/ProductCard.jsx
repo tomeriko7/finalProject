@@ -587,6 +587,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               top: 12,
               left: 12,
               backgroundColor: "rgba(255,255,255,0.9)",
+              color: "black",
               "&:hover": {
                 backgroundColor: "rgba(255,255,255,1)",
               },
@@ -716,6 +717,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               flex: 1,
               borderRadius: 0,
               py: 1.5,
+              direction: "ltr",
               "&:hover": {
                 backgroundColor: "action.hover",
               },
@@ -735,6 +737,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               borderLeft: "1px solid",
               borderColor: "divider",
               py: 1.5,
+              direction: "ltr",
               "&:hover": {
                 backgroundColor: "primary.main",
                 color: "white",
