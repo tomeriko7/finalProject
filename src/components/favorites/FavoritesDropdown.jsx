@@ -39,6 +39,7 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
 
   const handleMoveToCart = (product) => {
     dispatch(addToCart({ product }));
+     dispatch(removeFromFavorites(product.id || product._id));
   };
 
   const handleClose = () => {
