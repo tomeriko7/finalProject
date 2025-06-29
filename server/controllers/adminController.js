@@ -108,7 +108,11 @@ export const getDashboardStats = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('שגיאה בקבלת סטטיסטיקות לוח הבקרה:', error);
+    logger.error('שגיאה בקבלת סטטיסטיקות לוח הבקרה:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.user?.id
+    });
     res.status(500).json({
       success: false,
       message: 'שגיאת שרת פנימית',
@@ -174,7 +178,11 @@ export const getSalesStats = async (req, res) => {
       salesData: safeSalesData
     });
   } catch (error) {
-    console.error('שגיאה בקבלת סטטיסטיקות מכירות:', error);
+    logger.error('שגיאה בקבלת סטטיסטיקות מכירות:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.user?.id
+    });
     res.status(500).json({
       success: false,
       message: 'שגיאת שרת פנימית',
@@ -198,7 +206,11 @@ export const getRecentUsers = async (req, res) => {
       users
     });
   } catch (error) {
-    console.error('שגיאה בקבלת משתמשים אחרונים:', error);
+    logger.error('שגיאה בקבלת משתמשים אחרונים:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.user?.id
+    });
     res.status(500).json({
       success: false,
       message: 'שגיאת שרת פנימית',
@@ -240,7 +252,11 @@ export const getRecentOrders = async (req, res) => {
       orders: formattedOrders
     });
   } catch (error) {
-    console.error('שגיאה בקבלת הזמנות אחרונות:', error);
+    logger.error('שגיאה בקבלת הזמנות אחרונות:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.user?.id
+    });
     res.status(500).json({
       success: false,
       message: 'שגיאת שרת פנימית',

@@ -73,8 +73,8 @@ export const Footer = () => {
                 }}
               />
               <Typography variant="body2" sx={{ mb: 2, textAlign: { xs: 'center', md: 'right' } }}>
-                חנות המוצרים הטובה ביותר בישראל, מאז 2021.
-                אנו מתמחים באספקת מוצרים איכותיים במחירים תחרותיים.
+              מובילים בתחום המשתלות בישראל מאז 2021.
+אנו מציעים צמחים וציוד גינון איכותיים במחירים משתלמים במיוחד
               </Typography>
               <Stack direction="row" spacing={1}>
                 <IconButton color="primary" aria-label="פייסבוק" size="small">
@@ -158,7 +158,7 @@ export const Footer = () => {
             <List dense disablePadding>
               <ListItem sx={{ px: 0 }}>
                 <LocationOnIcon fontSize="small" sx={{ ml: 1 }} />
-                <ListItemText primary="רח' הדוגמא 123, תל אביב" />
+                <ListItemText primary="רחוב ז'בוטינסקי פתח תקווה" />
               </ListItem>
               <ListItem sx={{ px: 0 }}>
                 <PhoneIcon fontSize="small" sx={{ ml: 1 }} />
@@ -166,11 +166,11 @@ export const Footer = () => {
               </ListItem>
               <ListItem sx={{ px: 0 }}>
                 <EmailIcon fontSize="small" sx={{ ml: 1 }} />
-                <ListItemText primary="info@example.com" />
+                <ListItemText primary="info@hatene.com" />
               </ListItem>
               <ListItem sx={{ px: 0 }}>
                 <WhatsAppIcon fontSize="small" sx={{ ml: 1 }} />
-                <ListItemText primary="054-1234567" />
+                <ListItemText primary="050-000-0000" />
               </ListItem>
             </List>
           </Grid>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -22,7 +22,13 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { removeFromCart, updateCartQuantity } from '../../store/slices/cartSlice';
+import { 
+  removeFromCart, 
+  updateCartQuantity,
+  removeFromCartAsync,
+  updateCartQuantityAsync
+} from '../../store/slices/cartSlice';
+import { AuthContext } from '../../services/AuthContext';
 import CloseIcon from '@mui/icons-material/Close';
 
 const CartDropdown = () => {
@@ -30,20 +36,63 @@ const CartDropdown = () => {
   const { items, subtotal, itemCount } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const isAuthenticated = !!user;
+  
+  // חישוב סה"כ דינמי מהפריטים בעגלה
+  const calculateTotal = () => {
+    if (!items || items.length === 0) return 0;
+    return items.reduce((total, item) => {
+      const itemPrice = Number(item.price || item.product?.price || 0);
+      const itemQuantity = Number(item.quantity || 1);
+      // וידוא שהערכים הם מספרים תקינים
+      if (isNaN(itemPrice) || isNaN(itemQuantity)) return total;
+      return total + (itemPrice * itemQuantity);
+    }, 0);
+  };
+
+  const dynamicSubtotal = calculateTotal() || 0;
+  const totalItems = items ? items.reduce((total, item) => total + (Number(item.quantity) || 1), 0) : 0;
   
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleRemoveItem = (itemId) => {
-    dispatch(removeFromCart(itemId));
+  const handleRemoveItem = async (item) => {
+    try {
+      if (isAuthenticated) {
+        // משתמש מחובר - הסרה מהשרת
+        await dispatch(removeFromCartAsync(item._id)).unwrap();
+      } else {
+        // משתמש לא מחובר - הסרה מ-localStorage
+        dispatch(removeFromCart(item._id || item.id));
+      }
+    } catch (error) {
+      console.error('Error removing item from cart:', error);
+    }
   };
 
-  const handleUpdateQuantity = (itemId, newQuantity) => {
-    if (newQuantity <= 0) {
-      dispatch(removeFromCart(itemId));
-    } else {
-      dispatch(updateCartQuantity({ itemId, quantity: newQuantity }));
+  const handleUpdateQuantity = async (item, newQuantity) => {
+    try {
+      if (newQuantity <= 0) {
+        await handleRemoveItem(item);
+      } else {
+        if (isAuthenticated) {
+          // משתמש מחובר - עדכון בשרת
+          await dispatch(updateCartQuantityAsync({ 
+            cartItemId: item._id, 
+            quantity: newQuantity 
+          })).unwrap();
+        } else {
+          // משתמש לא מחובר - עדכון ב-localStorage
+          dispatch(updateCartQuantity({ 
+            itemId: item._id || item.id, 
+            quantity: newQuantity 
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
     }
   };
 
@@ -68,7 +117,7 @@ const CartDropdown = () => {
           }}
         >
           <Badge 
-            badgeContent={itemCount} 
+            badgeContent={totalItems} 
             color="error"
             max={99}
             sx={{
@@ -126,10 +175,18 @@ const CartDropdown = () => {
             </Box>
           ) : (
             <>
-              <List sx={{ flexGrow: 1, overflow: 'auto' }}>
-                {items.map((item) => (
-                  <React.Fragment key={item._id}>
-                    <ListItem alignItems="flex-start">
+              <List sx={{ flexGrow: 1, overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+                {items.map((item, index) => (
+                  <React.Fragment key={item._id || item.id || index}>
+                    <ListItem 
+                      alignItems="flex-start"
+                      sx={{ 
+                        py: 2,
+                        '&:hover': {
+                          bgcolor: 'action.hover'
+                        }
+                      }}
+                    >
                       <ListItemAvatar>
                         <Box
                           sx={{
@@ -146,23 +203,24 @@ const CartDropdown = () => {
                             justifyContent: 'center',
                           }}
                         >
-                          {(item.image || item.imageUrl) ? (
+                          {(item.imageUrl || item.image || item.product?.imageUrl || item.product?.image) ? (
                             <Box
                               component="img"
                               src={(() => {
-                                const imgSrc = item.image || item.imageUrl;
-                                if (!imgSrc) return '/placeholder.png';
-                                return imgSrc.startsWith('http') ? imgSrc : `${process.env.REACT_APP_API_URL || ''}${imgSrc}`;
+                                const imgSrc = item.imageUrl || item.image || item.product?.imageUrl || item.product?.image;
+                                if (!imgSrc) return '/logo192.png';
+                                if (imgSrc.startsWith('http')) return imgSrc;
+                                return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${imgSrc}`;
                               })()}
-                              alt={item.name}
+                              alt={item.name || item.product?.name || 'מוצר'}
                               sx={{
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'cover',
                               }}
                               onError={(e) => {
-                                e.target.onerror = null; // הימנעות מלולאה אינסופית
-                                e.target.src = '/placeholder.png';
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/60x60?text=תמונה+לא+זמינה';
                               }}
                             />
                           ) : (
@@ -175,16 +233,16 @@ const CartDropdown = () => {
                       <ListItemText
                         primary={
                           <Typography variant="subtitle1" fontWeight="medium" noWrap>
-                            {item.name}
+                            {item.name || item.product?.name || 'מוצר לא מזוהה'}
                           </Typography>
                         }
                         secondary={
                           <Box>
                             <Typography component="span" variant="body2" color="text.primary">
-                              ₪{item.price} × {item.quantity}
+                              ₪{Number(item.price || item.product?.price || 0).toFixed(2)} × {item.quantity || 1}
                             </Typography>
                             <Typography component="span" variant="body2" color="primary.main" sx={{ display: 'block', fontWeight: 'bold' }}>
-                              ₪{(item.price * item.quantity).toFixed(2)}
+                              ₪{(Number(item.price || item.product?.price || 0) * Number(item.quantity || 1)).toFixed(2)}
                             </Typography>
                           </Box>
                         }
@@ -194,20 +252,42 @@ const CartDropdown = () => {
                           <ButtonGroup size="small" orientation="vertical" variant="outlined">
                             <IconButton 
                               size="small"
-                              onClick={() => handleUpdateQuantity(item._id, item.quantity + 1)}
+                              onClick={() => handleUpdateQuantity(item, (item.quantity || 1) + 1)}
+                              title="הוספת יחידה"
                             >
                               <AddIcon fontSize="small" />
                             </IconButton>
+                            
+                            {/* הצגת הכמות */}
+                            <Box 
+                              sx={{ 
+                                py: 0.5, 
+                                px: 1, 
+                                backgroundColor: 'background.paper',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                minWidth: 32,
+                                textAlign: 'center'
+                              }}
+                            >
+                              <Typography variant="caption" fontWeight="bold">
+                                {item.quantity || 1}
+                              </Typography>
+                            </Box>
+                            
                             <IconButton 
                               size="small"
-                              onClick={() => handleUpdateQuantity(item._id, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item, (item.quantity || 1) - 1)}
+                              title="הסרת יחידה"
                             >
                               <RemoveIcon fontSize="small" />
                             </IconButton>
                           </ButtonGroup>
                           <IconButton 
                             size="small"
-                            onClick={() => handleRemoveItem(item._id)}
+                            onClick={() => handleRemoveItem(item)}
+                            color="error"
+                            title="הסרת מוצר"
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -222,7 +302,9 @@ const CartDropdown = () => {
               <Box sx={{ mt: 'auto', pt: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                   <Typography variant="subtitle1">סה"כ:</Typography>
-                  <Typography variant="subtitle1" fontWeight="bold">₪{subtotal.toFixed(2)}</Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    ₪{Number(dynamicSubtotal || 0).toFixed(2)}
+                  </Typography>
                 </Box>
                 
                 <Button
@@ -232,8 +314,9 @@ const CartDropdown = () => {
                   size="large"
                   sx={{ mb: 1 }}
                   onClick={handleCheckout}
+                  disabled={!items || items.length === 0}
                 >
-                  מעבר לקופה
+                  מעבר לקופה ({totalItems} מוצרים)
                 </Button>
                 
                 <Button

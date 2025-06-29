@@ -29,6 +29,14 @@ async function startServer() {
   const adminModule = await import('./routes/adminRoutes.js');
   const adminRoutes = adminModule.default;
 
+  // Dynamic import for favorite routes
+  const favoriteModule = await import('./routes/favoriteRoutes.js');
+  const favoriteRoutes = favoriteModule.default;
+
+  // Dynamic import for cart routes
+  const cartModule = await import('./routes/cartRoutes.js');
+  const cartRoutes = cartModule.default;
+
   const app = express();
   const PORT = process.env.PORT || 5000;
 
@@ -95,6 +103,8 @@ async function startServer() {
   app.use('/api/upload', uploadRoutes);
   app.use('/api/orders', orderRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/favorites', favoriteRoutes);
+  app.use('/api/cart', cartRoutes);
   
   logger.info('Routes registered', {
     routes: [
@@ -102,7 +112,9 @@ async function startServer() {
       '/api/products',
       '/api/upload',
       '/api/orders',
-      '/api/admin'
+      '/api/admin',
+      '/api/favorites',
+      '/api/cart'
     ]
   });
 

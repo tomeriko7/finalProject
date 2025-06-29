@@ -24,32 +24,39 @@ import {
 
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../services/AuthContext";
+import { useLogout } from "../../hooks/useLogout";
 
-const UserMenu = ({ 
-  user, 
-  isAdmin, 
-  theme, 
-  showSnackbar, 
+const UserMenu = ({
+  user,
+  isAdmin,
+  theme,
+  showSnackbar,
   isCompact = false,
   isMobile = false,
-  onClose
+  onClose,
 }) => {
-  const { logout } = useContext(AuthContext);
+  const { logout: contextLogout } = useContext(AuthContext);
+  const { logout, isClearing } = useLogout();
   const navigate = useNavigate();
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
-  
-  const isVerySmall = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const isVerySmall = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleUserMenuOpen = (event) =>
     setUserMenuAnchorEl(event.currentTarget);
   const handleUserMenuClose = () => setUserMenuAnchorEl(null);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleUserMenuClose();
     if (onClose) onClose(); // Close mobile drawer if exists
-    logout();
-    navigate("/");
-    showSnackbar("התנתקת בהצלחה", "success");
+
+    try {
+      await logout(); // השימוש ב-hook החדש שמנקה הכל
+      navigate("/");
+      showSnackbar("התנתקת בהצלחה ", "success");
+    } catch (error) {
+      showSnackbar("שגיאה בהתנתקות", "error");
+    }
   };
 
   const handleMenuItemClick = (callback) => {
@@ -63,24 +70,27 @@ const UserMenu = ({
     return (
       <Box sx={{ px: 2, py: 1 }}>
         {/* User Info Header */}
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: 2, 
-          mb: 2,
-          p: 1,
-          backgroundColor: theme.palette.primary.light + '20',
-          borderRadius: 1,
-        }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            mb: 2,
+            p: 1,
+            backgroundColor: theme.palette.primary.light + "20",
+            borderRadius: 1,
+          }}
+        >
           <Avatar
-            sx={{ 
-              width: 40, 
+            sx={{
+              width: 40,
               height: 40,
               backgroundColor: theme.palette.primary.main,
-              fontSize: "1rem"
+              fontSize: "1rem",
             }}
           >
-            {user.firstName?.[0]}{user.lastName?.[0]}
+            {user.firstName?.[0]}
+            {user.lastName?.[0]}
           </Avatar>
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
@@ -143,12 +153,12 @@ const UserMenu = ({
           <ListItem disablePadding>
             <ListItemButton
               onClick={handleLogout}
-              sx={{ 
+              sx={{
                 borderRadius: 1,
                 color: theme.palette.error.main,
                 "&:hover": {
-                  backgroundColor: theme.palette.error.light + '20',
-                }
+                  backgroundColor: theme.palette.error.light + "20",
+                },
               }}
             >
               <ListItemIcon sx={{ minWidth: "auto", mr: 2, color: "inherit" }}>
@@ -182,38 +192,38 @@ const UserMenu = ({
       >
         {!isCompact && (
           <Avatar
-            sx={{ 
-              width: { xs: 24, sm: 28, md: 32 }, 
+            sx={{
+              width: { xs: 24, sm: 28, md: 32 },
               height: { xs: 24, sm: 28, md: 32 },
               backgroundColor: theme.palette.primary.main,
-              fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.8rem" }
+              fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.8rem" },
             }}
           >
-            {user.firstName?.[0]}{user.lastName?.[0]}
+            {user.firstName?.[0]}
+            {user.lastName?.[0]}
           </Avatar>
         )}
-        
-        <Box sx={{ 
-          display: "flex", 
-          flexDirection: "column", 
-          alignItems: "flex-start",
-          textAlign: "right"
-        }}>
-          <Typography 
-            variant={isVerySmall ? "caption" : "body2"} 
-            sx={{ 
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            textAlign: "right",
+          }}
+        >
+          <Typography
+            variant={isVerySmall ? "caption" : "body2"}
+            sx={{
               fontWeight: "bold",
               lineHeight: 1.2,
               maxWidth: { xs: "80px", sm: "120px", md: "none" },
               overflow: "hidden",
               textOverflow: "ellipsis",
-              whiteSpace: "nowrap"
+              whiteSpace: "nowrap",
             }}
           >
-            {isCompact 
-              ? user.firstName 
-              : `${user.firstName} ${user.lastName}`
-            }
+            {isCompact ? user.firstName : `${user.firstName} ${user.lastName}`}
           </Typography>
           {!isCompact && !isVerySmall && (
             <Typography variant="caption" color="text.secondary">
@@ -221,7 +231,7 @@ const UserMenu = ({
             </Typography>
           )}
         </Box>
-        
+
         {!isCompact && (
           <KeyboardArrowDownIcon fontSize={isVerySmall ? "small" : "medium"} />
         )}
@@ -251,12 +261,14 @@ const UserMenu = ({
         }}
       >
         {/* User Info in Menu Header */}
-        <Box sx={{ 
-          px: 2, 
-          py: 1.5, 
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          backgroundColor: theme.palette.background.default,
-        }}>
+        <Box
+          sx={{
+            px: 2,
+            py: 1.5,
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            backgroundColor: theme.palette.background.default,
+          }}
+        >
           <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
             {user.firstName} {user.lastName}
           </Typography>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -28,7 +28,15 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { updateCartQuantity, removeFromCart, clearCart } from '../store/slices/cartSlice';
+import { 
+  updateCartQuantity, 
+  removeFromCart, 
+  clearCart,
+  updateCartQuantityAsync,
+  removeFromCartAsync,
+  clearCartAsync
+} from '../store/slices/cartSlice';
+import { AuthContext } from '../services/AuthContext';
 
 const Cart = () => {
   const { items, subtotal, shipping, tax, total, itemCount } = useSelector(state => state.cart);
@@ -36,21 +44,70 @@ const Cart = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user } = useContext(AuthContext);
+  const isAuthenticated = !!user;
 
-  const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity <= 0) {
-      dispatch(removeFromCart(itemId));
-    } else {
-      dispatch(updateCartQuantity({ itemId, quantity: newQuantity }));
+  // חישוב סה"כ דינמי כמו ב-CartDropdown
+  const calculateTotal = () => {
+    if (!items || items.length === 0) return 0;
+    return items.reduce((total, item) => {
+      const itemPrice = Number(item.price || item.product?.price || 0);
+      const itemQuantity = Number(item.quantity || 1);
+      if (isNaN(itemPrice) || isNaN(itemQuantity)) return total;
+      return total + (itemPrice * itemQuantity);
+    }, 0);
+  };
+
+  const dynamicSubtotal = calculateTotal() || 0;
+  const dynamicShipping = Number(shipping) || 0;
+  const dynamicTax = Number(tax) || 0;
+  const dynamicTotal = dynamicSubtotal + dynamicShipping + dynamicTax;
+  const totalItems = items ? items.reduce((total, item) => total + (Number(item.quantity) || 1), 0) : 0;
+
+  const handleQuantityChange = async (item, newQuantity) => {
+    try {
+      if (newQuantity <= 0) {
+        await handleRemoveItem(item);
+      } else {
+        if (isAuthenticated) {
+          await dispatch(updateCartQuantityAsync({ 
+            cartItemId: item._id, 
+            quantity: newQuantity 
+          })).unwrap();
+        } else {
+          dispatch(updateCartQuantity({ 
+            itemId: item._id || item.id, 
+            quantity: newQuantity 
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error updating quantity:', error);
     }
   };
 
-  const handleRemoveItem = (itemId) => {
-    dispatch(removeFromCart(itemId));
+  const handleRemoveItem = async (item) => {
+    try {
+      if (isAuthenticated) {
+        await dispatch(removeFromCartAsync(item._id)).unwrap();
+      } else {
+        dispatch(removeFromCart(item._id || item.id));
+      }
+    } catch (error) {
+      console.error('Error removing item:', error);
+    }
   };
 
-  const handleClearCart = () => {
-    dispatch(clearCart());
+  const handleClearCart = async () => {
+    try {
+      if (isAuthenticated) {
+        await dispatch(clearCartAsync()).unwrap();
+      } else {
+        dispatch(clearCart());
+      }
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+    }
   };
   
   // לחיצה על כפתור המשך לקנות  
@@ -96,23 +153,23 @@ const Cart = () => {
         </Typography>
         <Box sx={{ mt: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-            <Typography variant="body1">מחיר המוצרים ({itemCount}):</Typography>
-            <Typography variant="body1">₪{subtotal.toFixed(2)}</Typography>
+            <Typography variant="body1">מחיר המוצרים ({totalItems}):</Typography>
+            <Typography variant="body1">₪{dynamicSubtotal.toFixed(2)}</Typography>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
             <Typography variant="body1">משלוח:</Typography>
-            <Typography variant="body1">₪{shipping.toFixed(2)}</Typography>
+            <Typography variant="body1">₪{dynamicShipping.toFixed(2)}</Typography>
           </Box>
-          {tax > 0 && (
+          {dynamicTax > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
               <Typography variant="body1">מע"מ:</Typography>
-              <Typography variant="body1">₪{tax.toFixed(2)}</Typography>
+              <Typography variant="body1">₪{dynamicTax.toFixed(2)}</Typography>
             </Box>
           )}
           <Divider sx={{ my: 2 }} />
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Typography variant="h6" fontWeight="bold">סה"כ לתשלום:</Typography>
-            <Typography variant="h6" color="primary" fontWeight="bold">₪{total.toFixed(2)}</Typography>
+            <Typography variant="h6" color="primary" fontWeight="bold">₪{dynamicTotal.toFixed(2)}</Typography>
           </Box>
           <Button 
             variant="contained" 
@@ -146,10 +203,27 @@ const Cart = () => {
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={4}>
                 <Avatar 
-                  src={item.imageUrl || 'https://via.placeholder.com/100'} 
-                  alt={item.name}
+                  src={(() => {
+                    const imgSrc = item.imageUrl || item.image || item.product?.imageUrl || item.product?.image;
+                    if (!imgSrc) return 'https://via.placeholder.com/100x100?text=תמונה+לא+זמינה';
+                    if (imgSrc.startsWith('http')) return imgSrc;
+                    return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${imgSrc}`;
+                  })()}
+                  alt={item.name || item.product?.name || 'מוצר'}
                   variant="rounded"
-                  sx={{ width: '100%', height: 'auto', aspectRatio: '1/1' }}
+                  sx={{ 
+                    width: '100%', 
+                    height: 'auto', 
+                    aspectRatio: '1/1',
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}
+                  imgProps={{
+                    onError: (e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/100x100?text=תמונה+לא+זמינה';
+                    }
+                  }}
                 />
               </Grid>
               <Grid item xs={8}>
@@ -157,19 +231,19 @@ const Cart = () => {
                   {item.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  מחיר: ₪{item.price.toFixed(2)}
+                  מחיר: ₪{(Number(item.price || item.product?.price || 0)).toFixed(2)}
                 </Typography>
                 
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                   <IconButton 
                     size="small" 
-                    onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
+                    onClick={() => handleQuantityChange(item, (Number(item.quantity) || 1) - 1)}
                   >
                     <RemoveIcon fontSize="small" />
                   </IconButton>
                   <TextField
                     size="small"
-                    value={item.quantity}
+                    value={Number(item.quantity) || 1}
                     inputProps={{ 
                       style: { textAlign: 'center' }, 
                       min: 1, 
@@ -179,13 +253,13 @@ const Cart = () => {
                     onChange={(e) => {
                       const value = parseInt(e.target.value);
                       if (!isNaN(value) && value > 0) {
-                        handleQuantityChange(item._id, value);
+                        handleQuantityChange(item, value);
                       }
                     }}
                   />
                   <IconButton 
                     size="small" 
-                    onClick={() => handleQuantityChange(item._id, item.quantity + 1)}
+                    onClick={() => handleQuantityChange(item, (Number(item.quantity) || 1) + 1)}
                   >
                     <AddIcon fontSize="small" />
                   </IconButton>
@@ -195,11 +269,11 @@ const Cart = () => {
             
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, alignItems: 'center' }}>
               <Typography variant="subtitle1" fontWeight="bold">
-                סה"כ: ₪{(item.price * item.quantity).toFixed(2)}
+                סה"כ: ₪{((Number(item.price || item.product?.price || 0)) * (Number(item.quantity) || 1)).toFixed(2)}
               </Typography>
               <IconButton 
                 color="error" 
-                onClick={() => handleRemoveItem(item._id)}
+                onClick={() => handleRemoveItem(item)}
               >
                 <DeleteIcon />
               </IconButton>
@@ -229,26 +303,43 @@ const Cart = () => {
               <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Avatar 
-                    src={item.imageUrl || 'https://via.placeholder.com/60'} 
-                    alt={item.name} 
+                    src={(() => {
+                      const imgSrc = item.imageUrl || item.image || item.product?.imageUrl || item.product?.image;
+                      if (!imgSrc) return 'https://via.placeholder.com/60x60?text=תמונה+לא+זמינה';
+                      if (imgSrc.startsWith('http')) return imgSrc;
+                      return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${imgSrc}`;
+                    })()}
+                    alt={item.name || item.product?.name || 'מוצר'}
                     variant="rounded"
-                    sx={{ width: 60, height: 60, mr: 2 }}
+                    sx={{ 
+                      width: 60, 
+                      height: 60, 
+                      mr: 2,
+                      border: '1px solid',
+                      borderColor: 'divider'
+                    }}
+                    imgProps={{
+                      onError: (e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/60x60?text=תמונה+לא+זמינה';
+                      }
+                    }}
                   />
-                  <Typography variant="subtitle1">{item.name}</Typography>
+                  <Typography variant="subtitle1">{item.name || item.product?.name}</Typography>
                 </Box>
               </TableCell>
-              <TableCell align="center">₪{item.price.toFixed(2)}</TableCell>
+              <TableCell align="center">₪{(Number(item.price || item.product?.price || 0)).toFixed(2)}</TableCell>
               <TableCell align="center">
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <IconButton 
                     size="small" 
-                    onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
+                    onClick={() => handleQuantityChange(item, (Number(item.quantity) || 1) - 1)}
                   >
                     <RemoveIcon fontSize="small" />
                   </IconButton>
                   <TextField
                     size="small"
-                    value={item.quantity}
+                    value={Number(item.quantity) || 1}
                     inputProps={{ 
                       style: { textAlign: 'center' }, 
                       min: 1, 
@@ -258,25 +349,25 @@ const Cart = () => {
                     onChange={(e) => {
                       const value = parseInt(e.target.value);
                       if (!isNaN(value) && value > 0) {
-                        handleQuantityChange(item._id, value);
+                        handleQuantityChange(item, value);
                       }
                     }}
                   />
                   <IconButton 
                     size="small" 
-                    onClick={() => handleQuantityChange(item._id, item.quantity + 1)}
+                    onClick={() => handleQuantityChange(item, (Number(item.quantity) || 1) + 1)}
                   >
                     <AddIcon fontSize="small" />
                   </IconButton>
                 </Box>
               </TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                ₪{(item.price * item.quantity).toFixed(2)}
+                ₪{((Number(item.price || item.product?.price || 0)) * (Number(item.quantity) || 1)).toFixed(2)}
               </TableCell>
               <TableCell align="center">
                 <IconButton 
                   color="error" 
-                  onClick={() => handleRemoveItem(item._id)}
+                  onClick={() => handleRemoveItem(item)}
                 >
                   <DeleteIcon />
                 </IconButton>

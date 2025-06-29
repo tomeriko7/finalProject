@@ -1,4 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { clearCart } from "../store/slices/cartSlice";
+import { clearFavorites } from "../store/slices/favoritesSlice";
 
 export const AuthContext = createContext();
 
@@ -21,9 +24,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // ניקוי מצב המשתמש
     setUser(null);
+    
+    // ניקוי localStorage מכל הנתונים הקשורים למשתמש
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("cart");
+    localStorage.removeItem("favorites");
+    localStorage.removeItem("favoritesQuantity");
+    
+    // אם יש עוד מפתחות של localStorage שקשורים למשתמש, נוסיף אותם כאן
+    // לדוגמה:
+    // localStorage.removeItem("userPreferences");
+    // localStorage.removeItem("recentSearches");
+    
+    // ניקוי sessionStorage (אם משתמשים בו)
+    sessionStorage.clear();
   };
 
   const updateUser = (updatedUser) => {

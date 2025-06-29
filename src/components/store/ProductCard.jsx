@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   Card,
   CardMedia,
@@ -29,8 +29,15 @@ import {
   LocalOffer as LocalOfferIcon,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { addToCart } from "../../store/slices/cartSlice";
-import { toggleFavorite } from "../../store/slices/favoritesSlice";
+import { AuthContext } from "../../services/AuthContext";
+import { 
+  addToCart, 
+  addToCartAsync 
+} from "../../store/slices/cartSlice";
+import { 
+  toggleFavorite, 
+  toggleFavoriteAsync 
+} from "../../store/slices/favoritesSlice";
 import { formatPrice } from "../../utils/formatters";
 
 const ProductCard = ({ product, viewMode = "grid" }) => {
@@ -47,6 +54,10 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
 
+  // בדיקה האם המשתמש מחובר דרך AuthContext
+  const { user } = useContext(AuthContext);
+  const isAuthenticated = !!user;
+  
   // בדיקה האם המוצר נמצא במועדפים
   const favorites = useSelector((state) => state.favorites.favorites);
   const productId = product.id || product._id;
@@ -54,7 +65,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
     (item) => item.id === productId || item._id === productId
   );
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (product.stockQuantity <= 0) {
       setSnackbar({
         open: true,
@@ -64,22 +75,75 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
       return;
     }
 
-    dispatch(addToCart({ product }));
-    setSnackbar({
-      open: true,
-      message: "המוצר נוסף לעגלה בהצלחה!",
-      severity: "success",
-    });
+    try {
+      if (isAuthenticated) {
+        // משתמש מחובר - שמירה בשרת
+        await dispatch(addToCartAsync({ 
+          productId: product._id, 
+          quantity: 1 
+        })).unwrap();
+      } else {
+        // משתמש לא מחובר - שמירה ב-localStorage
+        dispatch(addToCart({ product }));
+      }
+      
+      setSnackbar({
+        open: true,
+        message: "המוצר נוסף לעגלה בהצלחה!",
+        severity: "success",
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "שגיאה בהוספת המוצר לעגלה",
+        severity: "error",
+      });
+    }
   };
 
-  const handleToggleFavorite = () => {
-    dispatch(toggleFavorite({ product }));
-
-    setSnackbar({
-      open: true,
-      message: isFavorite ? "הוסר מהמועדפים" : "נוסף למועדפים",
-      severity: "info",
+  const handleToggleFavorite = async () => {
+    console.log('Toggle favorite clicked:', {
+      productId: product._id,
+      isAuthenticated,
+      isFavorite,
+      user
     });
+    
+    try {
+      if (isAuthenticated) {
+        console.log('Dispatching toggleFavoriteAsync for authenticated user');
+        
+        // עדכון אופטימי - עדכן את המצב מיידית לפני השליחה לשרת
+        dispatch(toggleFavorite({ product }));
+        
+        // שליחה לשרת
+        await dispatch(toggleFavoriteAsync(product._id)).unwrap();
+        console.log('toggleFavoriteAsync completed successfully');
+      } else {
+        console.log('Dispatching local toggleFavorite for non-authenticated user');
+        // משתמש לא מחובר - שמירה ב-localStorage
+        dispatch(toggleFavorite({ product }));
+      }
+
+      setSnackbar({
+        open: true,
+        message: isFavorite ? "הוסר מהמועדפים" : "נוסף למועדפים",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error('Error in handleToggleFavorite:', error);
+      
+      // אם השליחה לשרת נכשלה ויש משתמש מחובר - החזר את השינוי
+      if (isAuthenticated) {
+        dispatch(toggleFavorite({ product }));
+      }
+      
+      setSnackbar({
+        open: true,
+        message: "שגיאה בעדכון המועדפים",
+        severity: "error",
+      });
+    }
   };
 
   const isOutOfStock = product.stockQuantity <= 0;

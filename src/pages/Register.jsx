@@ -107,8 +107,8 @@ const Register = () => {
     // בדיקת אורך מינימלי 8 תווים
     if (formData.password && formData.password.length < 8) {
       newErrors.password = "הסיסמה חייבת להכיל לפחות 8 תווים";
-    } 
-    
+    }
+
     // בדיקת מורכבות הסיסמה לפי הדרישות
     if (formData.password && !newErrors.password) {
       // בדיקת אות גדולה אחת לפחות
@@ -116,12 +116,16 @@ const Register = () => {
       // בדיקת אות קטנה אחת לפחות
       const hasLowerCase = /[a-z]/.test(formData.password);
       // בדיקת לפחות 4 מספרים
-      const hasEnoughNumbers = (formData.password.match(/[0-9]/g) || []).length >= 4;
+      const hasEnoughNumbers =
+        (formData.password.match(/[0-9]/g) || []).length >= 4;
       // בדיקת תו מיוחד אחד לפחות מתוך הרשימה
       const hasSpecialChar = /[!@#$%^&*]/.test(formData.password);
-      
-      if (!(hasUpperCase && hasLowerCase && hasEnoughNumbers && hasSpecialChar)) {
-        newErrors.password = "הסיסמה חייבת להכיל לפחות: אות אנגלית גדולה אחת, אות אנגלית קטנה אחת, 4 ספרות, סימן מיוחד (!@#$%^&*) ולפחות 8 תווים";
+
+      if (
+        !(hasUpperCase && hasLowerCase && hasEnoughNumbers && hasSpecialChar)
+      ) {
+        newErrors.password =
+          "הסיסמה חייבת להכיל לפחות: אות אנגלית גדולה אחת, אות אנגלית קטנה אחת, 4 ספרות, סימן מיוחד (!@#$%^&*) ולפחות 8 תווים";
       }
     }
     if (formData.address.zipCode && formData.address.zipCode.length < 7) {
@@ -164,7 +168,7 @@ const Register = () => {
 
         // שימוש ב-AuthContext במקום localStorage ישיר
         login(data.user, data.token);
-        
+
         // מחיקת נתוני הטופס
         setFormData({
           firstName: "",
@@ -179,12 +183,11 @@ const Register = () => {
 
         // ניווט לדף הבית באופן מיידי
         console.log("Auto login status:", data.autoLogin);
-        
+
         // לוודא שהניווט יקרה בכל מקרה של הרשמה מוצלחת
         setTimeout(() => {
-         
           navigate("/", { replace: true });
-        }, 2000);  
+        }, 2000);
       }
     } catch (error) {
       const errorMessage = handleApiError(error);
@@ -211,8 +214,7 @@ const Register = () => {
           zIndex: 1,
           width: "85%",
           maxWidth: "600px",
-          mx: 'auto',
-          
+          mx: "auto",
         }}
       >
         <div style={styles.card}>
@@ -315,7 +317,7 @@ const Register = () => {
                       ...(errors.password ? styles.inputError : {}),
                       paddingRight: "45px",
                     }}
-                    placeholder="לפחות 6 תווים"
+                    placeholder="לפחות 8 תווים "
                   />
                   <button
                     type="button"

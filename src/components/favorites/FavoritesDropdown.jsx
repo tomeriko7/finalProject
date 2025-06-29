@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,6 +16,8 @@ import {
   Tooltip,
   Menu,
   Paper,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   FavoriteBorder as FavoriteBorderIcon,
@@ -23,23 +25,93 @@ import {
   Close as CloseIcon,
   ShoppingCart as ShoppingCartIcon,
 } from "@mui/icons-material";
-import { removeFromFavorites } from "../../store/slices/favoritesSlice";
-import { addToCart } from "../../store/slices/cartSlice";
+import { removeFromFavorites, removeFromFavoritesAsync } from "../../store/slices/favoritesSlice";
+import { addToCart, addToCartAsync } from "../../store/slices/cartSlice";
+import { AuthContext } from "../../services/AuthContext";
 
 const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
   const { favorites, quantity } = useSelector((state) => state.favorites);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const isAuthenticated = !!user;
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const isOpen = Boolean(anchorEl);
 
-  const handleRemoveItem = (itemId) => {
-    dispatch(removeFromFavorites(itemId));
+  const handleRemoveItem = async (itemId) => {
+    try {
+      if (isAuthenticated) {
+        // משתמש מחובר - הסרה מהשרת
+        await dispatch(removeFromFavoritesAsync(itemId)).unwrap();
+      } else {
+        // משתמש לא מחובר - הסרה מ-localStorage
+        dispatch(removeFromFavorites(itemId));
+      }
+      
+      setSnackbar({
+        open: true,
+        message: "הוסר מהמועדפים בהצלחה!",
+        severity: "success",
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "שגיאה בהסרת המוצר מהמועדפים",
+        severity: "error",
+      });
+    }
   };
 
-  const handleMoveToCart = (product) => {
-    dispatch(addToCart({ product }));
-     dispatch(removeFromFavorites(product.id || product._id));
+  const handleMoveToCart = async (product) => {
+    // בדיקת מלאי
+    if (product.stockQuantity <= 0) {
+      setSnackbar({
+        open: true,
+        message: "המוצר אינו זמין במלאי",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      // הוספה לעגלה
+      if (isAuthenticated) {
+        // משתמש מחובר - שמירה בשרת
+        await dispatch(addToCartAsync({ 
+          productId: product._id || product.id, 
+          quantity: 1 
+        })).unwrap();
+      } else {
+        // משתמש לא מחובר - שמירה ב-localStorage
+        dispatch(addToCart({ product }));
+      }
+      
+      // הסרה ממועדפים אחרי הוספה מוצלחת לעגלה
+      const productId = product.id || product._id;
+      if (isAuthenticated) {
+        await dispatch(removeFromFavoritesAsync(productId)).unwrap();
+      } else {
+        dispatch(removeFromFavorites(productId));
+      }
+      
+      setSnackbar({
+        open: true,
+        message: "המוצר הועבר לעגלה בהצלחה!",
+        severity: "success",
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "שגיאה בהעברת המוצר לעגלה",
+        severity: "error",
+      });
+    }
   };
 
   const handleClose = () => {
@@ -49,6 +121,10 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
   const handleNavigate = (path) => {
     handleClose();
     navigate(path);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   // Mobile version - full screen drawer
@@ -150,11 +226,10 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                                 width: "100%",
                                 height: "100%",
                                 objectFit: "cover",
-                              }}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = "/placeholder.png";
-                              }}
+                              }}                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "/logo192.png";
+                            }}
                             />
                           ) : (
                             <Typography
@@ -185,9 +260,9 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                               sx={{ display: "block", fontWeight: "bold" }}
                             >
                               ₪
-                              {item.price && item.price.toFixed
+                              {typeof item.price === 'number' && !isNaN(item.price)
                                 ? item.price.toFixed(2)
-                                : item.price}
+                                : '0.00'}
                             </Typography>
                           </Box>
                         }
@@ -252,6 +327,22 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
             </>
           )}
         </Box>
+
+        {/* Snackbar for mobile */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseSnackbar} 
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Drawer>
     );
   }
@@ -360,7 +451,7 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                             }}
                             onError={(e) => {
                               e.target.onerror = null;
-                              e.target.src = "/placeholder.png";
+                              e.target.src = "/logo192.png";
                             }}
                           />
                         ) : (
@@ -387,9 +478,9 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
                           fontWeight="bold"
                         >
                           ₪
-                          {item.price && item.price.toFixed
+                          {typeof item.price === 'number' && !isNaN(item.price)
                             ? item.price.toFixed(2)
-                            : item.price}
+                            : '0.00'}
                         </Typography>
                       }
                     />
@@ -450,6 +541,22 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
           </>
         )}
       </Box>
+
+      {/* Snackbar for desktop */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Menu>
   );
 };

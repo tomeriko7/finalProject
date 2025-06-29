@@ -12,9 +12,11 @@ import { ThemeContext } from "../services/ThemeContext";
 import TopHeader from "./navbar/TopHeader";
 import MainNavbar from "./navbar/MainNavbar";
 import AdminMenu from "./navbar/AdminMenu";
+import { useLogout } from "../hooks/useLogout";
 
 export const Navbar = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const { logout } = useLogout();
   const { toggleMode } = useContext(ThemeContext);
   const theme = useTheme();
   

@@ -35,6 +35,7 @@ import {
 import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../services/AuthContext";
 import { useContext } from "react";
+import { useLogout } from "../../hooks/useLogout";
 
 const drawerWidth = 280;
 
@@ -52,7 +53,8 @@ export const AdminLayout = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const { logout } = useLogout();
   
   // הוספת בדיקת מדיה למובייל וטאבלט
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
