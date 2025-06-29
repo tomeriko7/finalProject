@@ -575,7 +575,7 @@ const Checkout = () => {
                   {item.name} × {item.quantity}
                 </Typography>
                 <Typography variant="body2">
-                  ₪{(item.price * item.quantity).toFixed(2)}
+                  ₪{((Number(item.price || item.product?.price || 0)) * (Number(item.quantity) || 1)).toFixed(2)}
                 </Typography>
               </Box>
             ))}

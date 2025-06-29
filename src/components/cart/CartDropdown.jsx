@@ -176,7 +176,7 @@ const CartDropdown = () => {
           ) : (
             <>
               <List sx={{ flexGrow: 1, overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
-                {items.map((item, index) => (
+                {[...items].reverse().map((item, index) => (
                   <React.Fragment key={item._id || item.id || index}>
                     <ListItem 
                       alignItems="flex-start"
@@ -248,7 +248,7 @@ const CartDropdown = () => {
                         }
                       />
                       <ListItemSecondaryAction>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                           <ButtonGroup size="small" orientation="vertical" variant="outlined">
                             <IconButton 
                               size="small"

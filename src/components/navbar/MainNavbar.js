@@ -237,6 +237,7 @@ const MainNavbar = ({
                     sx={{
                       transition: "color 0.2s ease-in-out",
                       "&:hover": {
+                        transform: 'translateY(-2px)',
                         color: theme.palette.primary.main,
                       },
                     }}

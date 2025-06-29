@@ -304,16 +304,7 @@ const FavoritesDropdown = ({ anchorEl, onClose, isMobile = false }) => {
               </List>
 
               <Box sx={{ mt: "auto", pt: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  size="large"
-                  sx={{ mb: 1 }}
-                  onClick={() => handleNavigate("/favorites")}
-                >
-                  צפייה בכל המועדפים
-                </Button>
+                
 
                 <Button
                   variant="outlined"

@@ -937,15 +937,27 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
               {/* כפתורי פעולה */}
               <Box sx={{ display: "flex", gap: 2, mt: "auto" }}>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   onClick={handleAddToCart}
                   disabled={isOutOfStock}
                   startIcon={<ShoppingCartIcon />}
-                  sx={{ flex: "1 0 200px" }}
+                  sx={{
+              flex: 1,
+              borderRadius: 0,
+              borderLeft: "1px solid",
+              borderColor: "divider",
+              py: 1.5,
+              direction: "ltr",
+              "&:hover": {
+                backgroundColor: "primary.main",
+                color: "white",
+              },
+            }}
                 >
                   {isOutOfStock ? "אזל מהמלאי" : "הוסף לעגלה"}
                 </Button>
                 <Button
+                
                   variant="outlined"
                   onClick={handleToggleFavorite}
                   startIcon={
@@ -955,7 +967,18 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                       <FavoriteBorderIcon />
                     )
                   }
-                  sx={{ flex: "1 0 200px" }}
+                  sx={{
+              flex: 1,
+              borderRadius: 0,
+              borderLeft: "1px solid",
+              borderColor: "divider",
+              py: 1.5,
+              direction: "ltr",
+              "&:hover": {
+                backgroundColor: "primary.main",
+                color: "white",
+              },
+            }}
                 >
                   {isFavorite ? "הסר ממועדפים" : "שמור למועדפים"}
                 </Button>
