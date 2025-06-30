@@ -77,7 +77,9 @@ const syncCartAsync = createAsyncThunk(
 const loadCartFromStorage = () => {
   if (typeof window !== "undefined") {
     const savedCart = localStorage.getItem("cart");
-    return savedCart ? JSON.parse(savedCart) : [];
+    const parsedCart = savedCart ? JSON.parse(savedCart) : [];
+    console.log("Loading cart from localStorage:", parsedCart);
+    return parsedCart;
   }
   return [];
 };
@@ -179,9 +181,11 @@ export const cartSlice = createSlice({
       state.subtotal = 0;
       state.total = 0;
 
-      if (!state.isAuthenticated) {
-        localStorage.removeItem("cart");
-      }
+      // מחיקת localStorage תמיד, גם עבור משתמשים מחוברים וגם לא מחוברים
+      // מחיקת כל נתוני העגלה מה-localStorage
+      localStorage.removeItem("cart");
+      localStorage.removeItem("cartQuantity");
+      localStorage.removeItem("cartTotal");
     },
 
     updateShipping: (state, action) => {
@@ -281,6 +285,10 @@ export const cartSlice = createSlice({
         state.itemCount = 0;
         state.subtotal = 0;
         state.total = 0;
+        // מחיקת localStorage גם עבור מחיקה אסינכרונית
+        localStorage.removeItem("cart");
+        localStorage.removeItem("cartQuantity");
+        localStorage.removeItem("cartTotal");
       })
       .addCase(clearCartAsync.rejected, (state, action) => {
         state.loading = false;

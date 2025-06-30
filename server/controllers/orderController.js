@@ -1,5 +1,6 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 import logger from '../utils/logger.js';
 import { safeMongooseSave } from '../middleware/validationMiddleware.js';
 
@@ -87,6 +88,17 @@ const createOrder = async (req, res) => {
     const populatedOrder = await Order.findById(savedOrder._id)
       .populate('user', 'firstName lastName email')
       .populate('items.product', 'name price imageUrl');
+      
+    // מחיקת העגלה של המשתמש מהמסד נתונים אחרי הזמנה מוצלחת
+    const user = await User.findById(req.user.id);
+    if (user) {
+      user.cart = [];
+      await user.save();
+      logger.info('User cart cleared after successful order', { 
+        userId: req.user.id,
+        orderId: populatedOrder._id 
+      });
+    }
       
     logger.info('New order created', { 
       orderId: populatedOrder._id, 

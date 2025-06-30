@@ -91,27 +91,15 @@ export const createOrderSchema = Joi.object({
     }),
   
   payment: Joi.object({
-    method: Joi.string().valid('credit_card', 'paypal', 'bit').required()
+    method: Joi.string().valid('credit').required()
       .messages({
-        'string.valid': 'שיטת תשלום חייבת להיות "credit_card", "paypal", או "bit"',
+        'string.valid': 'שיטת תשלום חייבת להיות כרטיס אשראי בלבד',
         'any.required': 'שיטת תשלום היא שדה חובה'
       }),
-    cardInfo: Joi.object({
-      cardholderName: Joi.string().when('method', {
-        is: 'credit_card',
-        then: Joi.required(),
-        otherwise: Joi.optional()
-      }).messages({
-        'any.required': 'שם בעל הכרטיס הוא שדה חובה בתשלום בכרטיס אשראי'
-      }),
-      lastFourDigits: Joi.string().when('method', {
-        is: 'credit_card',
-        then: Joi.required(),
-        otherwise: Joi.optional()
-      }).messages({
-        'any.required': '4 ספרות אחרונות של הכרטיס הן שדה חובה בתשלום בכרטיס אשראי'
+    cardLastFour: Joi.string().required()
+      .messages({
+        'any.required': '4 ספרות אחרונות של הכרטיס הן שדה חובה'
       })
-    }).optional()
   }).required()
     .messages({
       'any.required': 'פרטי תשלום הם שדה חובה'

@@ -46,11 +46,13 @@ const shippingSchema = new mongoose.Schema({
 const paymentSchema = new mongoose.Schema({
   method: {
     type: String,
-    enum: ['credit', 'paypal', 'cash'],
-    required: true
+    enum: ['credit'],
+    required: true,
+    default: 'credit'
   },
   cardLastFour: {
-    type: String
+    type: String,
+    required: true
   },
   transactionId: {
     type: String
