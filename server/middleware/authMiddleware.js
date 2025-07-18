@@ -1,5 +1,6 @@
 import { verifyToken } from "../utils/generateToken.js";
 import User from "../models/User.js";
+import logger from "../utils/logger.js";
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -27,8 +28,8 @@ const authMiddleware = async (req, res, next) => {
   } catch (error) {
     logger.error("Token verification failed", {
       error: error.message,
-      token: token ? 'present' : 'missing',
-      stack: error.stack
+      token: token ? "present" : "missing",
+      stack: error.stack,
     });
     res
       .status(401)
@@ -80,4 +81,8 @@ const optionalAuthMiddleware = async (req, res, next) => {
 };
 
 export default authMiddleware;
-export { authMiddleware as protect, adminMiddleware as admin, optionalAuthMiddleware as optionalAuth };
+export {
+  authMiddleware as protect,
+  adminMiddleware as admin,
+  optionalAuthMiddleware as optionalAuth,
+};
