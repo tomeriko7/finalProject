@@ -163,6 +163,7 @@ const Contact = () => {
                       required
                       variant="outlined"
                       size="large"
+                      inputProps={{ dir: "rtl" }}
                     />
 
                     <TextField
@@ -188,6 +189,7 @@ const Contact = () => {
                       rows={5}
                       variant="outlined"
                       placeholder="כתבו כאן את ההודעה שלכם..."
+                      inputProps={{ dir: "rtl" }}
                     />
 
                     <Button

@@ -133,7 +133,7 @@ const Profile = () => {
       </Typography>
       <form onSubmit={handleSubmit} dir="rtl">
         <Box display="flex" flexDirection="column" gap={2}>
-          <TextField
+                    <TextField
             label="שם פרטי"
             name="firstName"
             value={formData.firstName || ""}
@@ -141,8 +141,8 @@ const Profile = () => {
             fullWidth
             margin="normal"
             dir="rtl"
-            InputLabelProps={{ sx: styles.rtlLabelStyles }}
-            InputProps={{ sx: styles.rtlInputStyles }}
+            InputLabelProps={{ sx: styles.ltrLabelStyles }}
+            InputProps={{ sx: styles.ltrInputStyles }}
           />
           <TextField
             label="שם משפחה"
@@ -152,8 +152,8 @@ const Profile = () => {
             fullWidth
             margin="normal"
             dir="rtl"
-            InputLabelProps={{ sx: styles.rtlLabelStyles }}
-            InputProps={{ sx: styles.rtlInputStyles }}
+            InputLabelProps={{ sx: styles.ltrLabelStyles }}
+            InputProps={{ sx: styles.ltrInputStyles }}
           />
           <TextField
             label="אימייל"
@@ -164,8 +164,8 @@ const Profile = () => {
             margin="normal"
             disabled
             dir="rtl"
-            InputLabelProps={{ sx: styles.rtlLabelStyles }}
-            InputProps={{ sx: styles.rtlInputStyles }}
+            InputLabelProps={{ sx: styles.ltrLabelStyles }}
+            InputProps={{ sx: styles.ltrInputStyles }}
           />
           <TextField
             label="טלפון"
@@ -175,8 +175,8 @@ const Profile = () => {
             fullWidth
             margin="normal"
             dir="rtl"
-            InputLabelProps={{ sx: styles.rtlLabelStyles }}
-            InputProps={{ sx: styles.rtlInputStyles }}
+            InputLabelProps={{ sx: styles.ltrLabelStyles }}
+            InputProps={{ sx: styles.ltrInputStyles }}
           />
           <TextField
             label="רחוב ומספר בית"
@@ -186,8 +186,8 @@ const Profile = () => {
             fullWidth
             margin="normal"
             dir="rtl"
-            InputLabelProps={{ sx: styles.rtlLabelStyles }}
-            InputProps={{ sx: styles.rtlInputStyles }}
+            InputLabelProps={{ sx: styles.ltrLabelStyles }}
+            InputProps={{ sx: styles.ltrInputStyles }}
           />
           <TextField
             label="עיר"
@@ -197,8 +197,8 @@ const Profile = () => {
             fullWidth
             margin="normal"
             dir="rtl"
-            InputLabelProps={{ sx: styles.rtlLabelStyles }}
-            InputProps={{ sx: styles.rtlInputStyles }}
+            InputLabelProps={{ sx: styles.ltrLabelStyles }}
+            InputProps={{ sx: styles.ltrInputStyles }}
           />
           <TextField
             label="מיקוד"
@@ -208,9 +208,10 @@ const Profile = () => {
             fullWidth
             margin="normal"
             dir="rtl"
-            InputLabelProps={{ sx: styles.rtlLabelStyles }}
-            InputProps={{ sx: styles.rtlInputStyles }}
+            InputLabelProps={{ sx: styles.ltrLabelStyles }}
+            InputProps={{ sx: styles.ltrInputStyles }}
           />
+
           <Button
             type="submit"
             variant="contained"
