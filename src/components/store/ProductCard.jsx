@@ -102,25 +102,20 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
   };
 
   const handleToggleFavorite = async () => {
-    console.log('Toggle favorite clicked:', {
-      productId: product._id,
-      isAuthenticated,
-      isFavorite,
-      user
-    });
+    
     
     try {
       if (isAuthenticated) {
-        console.log('Dispatching toggleFavoriteAsync for authenticated user');
+        
         
         // עדכון אופטימי - עדכן את המצב מיידית לפני השליחה לשרת
         dispatch(toggleFavorite({ product }));
         
         // שליחה לשרת
         await dispatch(toggleFavoriteAsync(product._id)).unwrap();
-        console.log('toggleFavoriteAsync completed successfully');
+        
       } else {
-        console.log('Dispatching local toggleFavorite for non-authenticated user');
+        
         // משתמש לא מחובר - שמירה ב-localStorage
         dispatch(toggleFavorite({ product }));
       }

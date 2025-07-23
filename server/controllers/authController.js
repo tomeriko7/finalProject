@@ -314,6 +314,9 @@ const updateProfile = async (req, res) => {
         phone: updatedUser.phone,
         address: updatedUser.address,
         updatedAt: updatedUser.updatedAt,
+        isAdmin: updatedUser.isAdmin,
+        dateOfBirth: updatedUser.dateOfBirth,
+        preferences: updatedUser.preferences, 
       },
     });
   } catch (error) {

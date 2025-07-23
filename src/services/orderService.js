@@ -16,7 +16,7 @@ export const createOrder = async (orderData) => {
     } catch (innerError) {
       if (innerError.response && innerError.response.status === 404) {
         // נסה נתיב חלופי
-        console.log('Trying alternative endpoint...');
+        
         const response = await axios.post(`${API_BASE_URL}/order`, orderData, {
           headers: {
             'Content-Type': 'application/json',

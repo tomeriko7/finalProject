@@ -75,32 +75,7 @@ const Checkout = () => {
 
   const steps = ["פרטים אישיים", "כתובת למשלוח", "פרטי תשלום", "סיכום הזמנה"];
 
-  // Debug log המוצרים בעגלה
-  useEffect(() => {
-    console.log("=== Debug: Cart Items in Checkout ===");
-    console.log("items (redux state):", items);
-    if (items && items.length > 0) {
-      items.forEach((item, index) => {
-        console.log(`Item ${index}:`, {
-          _id: item._id,
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          product: item.product,
-          productId: item.product,
-          typeof_id: typeof item._id,
-          typeof_product: typeof item.product,
-          isValidObjectId_id: /^[0-9a-fA-F]{24}$/.test(item._id || ""),
-          isValidObjectId_product: item.product
-            ? /^[0-9a-fA-F]{24}$/.test(item.product)
-            : false,
-          allKeys: Object.keys(item),
-        });
-      });
-    }
-    console.log("=====================================");
-  }, [items]);
+
 
   // בדיקה אם העגלה ריקה - חזרה לדף הראשי
   useEffect(() => {
@@ -136,7 +111,7 @@ const Checkout = () => {
         if (timeSinceOrder > 30 * 60 * 1000) {
           sessionStorage.removeItem("orderCompleted");
           sessionStorage.removeItem("orderCompletedTime");
-          console.log("Order completed flag cleared after 30 minutes");
+         
         }
       }
     };
@@ -148,7 +123,7 @@ const Checkout = () => {
     const timeoutId = setTimeout(() => {
       sessionStorage.removeItem("orderCompleted");
       sessionStorage.removeItem("orderCompletedTime");
-      console.log("Order completed flag cleared after timeout");
+      
     }, 30 * 60 * 1000); // 30 דקות
 
     // ניקוי בעת יציאה מהקומפוננטה
@@ -292,31 +267,17 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      console.log("Cart items before processing:", items);
+      
 
       // נתוני ההזמנה לשרת
       const orderData = {
         items: items.map((item, index) => {
-          console.log(`Processing item ${index}:`, {
-            fullItem: item,
-            _id: item._id,
-            id: item.id,
-            product: item.product,
-            productId: item.product?._id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          });
+     
 
           // הלוגיקה הנכונה: אם יש item.product._id - זה ה-ID של המוצר במסד הנתונים
           // אחרת נשתמש ב-item._id (במקרה של מוצר שנוסף ישירות)
           const productId = item.product?._id || item._id || item.id;
-          console.log(`Final Product ID for item ${index}:`, productId);
-          console.log(`Product ID type:`, typeof productId);
-          console.log(
-            `Is valid ObjectId:`,
-            /^[0-9a-fA-F]{24}$/.test(productId || "")
-          );
+          
 
           if (!productId || !/^[0-9a-fA-F]{24}$/.test(productId)) {
             console.error(`Invalid product ID for item ${index}:`, productId);
@@ -355,13 +316,7 @@ const Checkout = () => {
         total: Number(total || 0),
       };
 
-      console.log("Sending order data:", JSON.stringify(orderData, null, 2));
       
-      // Debug payment data specifically
-      console.log("Payment data:", {
-        method: orderData.payment.method, // צריך להיות "credit"
-        cardLastFour: orderData.payment.cardLastFour
-      });
 
       // שליחת ההזמנה לשרת
       const response = await createOrder(orderData);
@@ -385,7 +340,7 @@ const Checkout = () => {
       sessionStorage.setItem("orderCompleted", "true");
       sessionStorage.setItem("orderCompletedTime", Date.now().toString());
       
-      console.log("Order completed - localStorage cleared and sessionStorage set");
+      
       
       setSnackbarOpen(true);
       setSnackbarMessage("ההזמנה בוצעה בהצלחה!");

@@ -78,7 +78,7 @@ const loadCartFromStorage = () => {
   if (typeof window !== "undefined") {
     const savedCart = localStorage.getItem("cart");
     const parsedCart = savedCart ? JSON.parse(savedCart) : [];
-    console.log("Loading cart from localStorage:", parsedCart);
+    
     return parsedCart;
   }
   return [];

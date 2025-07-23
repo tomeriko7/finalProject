@@ -10,7 +10,7 @@ const DataSyncProvider = ({ children }) => {
   useEffect(() => {
     // רק אחרי שהטעינה הסתיימה ויש משתמש מחובר
     if (!loading && user) {
-      console.log('DataSyncProvider: Syncing data for authenticated user');
+      
       syncWithServer();
     }
   }, [user, loading, syncWithServer]);

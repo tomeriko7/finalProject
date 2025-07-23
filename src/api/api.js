@@ -1,6 +1,5 @@
 // api/api.js
 import axios from "axios";
-
 // API base URL
 export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -31,10 +30,17 @@ api.interceptors.response.use(
   (error) => {
     const originalRequest = error.config;
 
-    // רק אם זה מ־/profile, לא מוחקים מיד
     if (error.response?.status === 401) {
-      console.warn("⚠️ שגיאת 401 - לא מוחק טוקן אוטומטית");
-      // תוכל כאן להציג Snackbar או להפנות לדף התחברות בצורה רכה יותר
+   
+      if (!originalRequest.url.includes('/logout') && !originalRequest.url.includes('/login')) {
+        // רישום שגיאה רק לקונסול המפתח, לא למערכת לוגים מרכזית
+        console.warn("⚠️ שגיאת 401 - טוקן לא תקף");
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+   
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(error);

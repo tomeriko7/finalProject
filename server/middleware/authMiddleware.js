@@ -74,7 +74,7 @@ const optionalAuthMiddleware = async (req, res, next) => {
     }
   } catch (error) {
     // Invalid token, but continue without user
-    console.log("Optional auth failed:", error.message);
+    logger.error("Optional auth failed:", error.message);
   }
 
   next();

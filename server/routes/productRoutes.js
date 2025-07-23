@@ -2,6 +2,7 @@ import express from 'express';
 import { protect, admin, optionalAuth } from '../middleware/authMiddleware.js';
 import { validateWithJoi } from '../middleware/validationMiddleware.js';
 import { createProductSchema, updateProductSchema, updateStockSchema, productReviewSchema } from '../validations/productValidation.js';
+import logger from '../utils/logger.js';
 import {
   createProduct,
   getProducts,
@@ -33,8 +34,11 @@ router.post(
   upload.single('image'),
   (req, res, next) => {
     // Debug log the incoming request
-    console.log('Request received at /api/products POST endpoint');
-    console.log('Content-Type:', req.headers['content-type']);
+    logger.debug('Request received at /api/products POST endpoint', {
+      contentType: req.headers['content-type'],
+      userId: req.user?.id,
+      hasFile: !!req.file
+    });
     next();
   },
   validateWithJoi(createProductSchema),

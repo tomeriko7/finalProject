@@ -181,8 +181,7 @@ const Register = () => {
           preferences: { newsletter: true, smsNotifications: false },
         });
 
-        // ניווט לדף הבית באופן מיידי
-        console.log("Auto login status:", data.autoLogin);
+        
 
         // לוודא שהניווט יקרה בכל מקרה של הרשמה מוצלחת
         setTimeout(() => {

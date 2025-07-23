@@ -140,8 +140,8 @@ const Products = () => {
       case "description":
         if (!stringValue || stringValue.trim() === "") {
           return "תיאור המוצר הוא שדה חובה";
-        } else if (stringValue.trim().length < 10) {
-          return "תיאור המוצר חייב להיות לפחות 10 תווים";
+        } else if (stringValue.trim().length < 3) {
+          return "תיאור המוצר חייב להיות לפחות 3 תווים";
         } else if (stringValue.trim().length > 5000) {
           return "תיאור המוצר יכול להיות עד 5000 תווים";
         }
@@ -299,9 +299,7 @@ const Products = () => {
         })(),
       };
 
-      console.log("Sending product data to server:", productData);
-      console.log("Current product before processing:", currentProduct);
-
+      
       let result;
       if (currentProduct._id) {
         // Update existing product

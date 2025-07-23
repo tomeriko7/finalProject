@@ -55,7 +55,7 @@ export const useLogout = () => {
       await new Promise(resolve => setTimeout(resolve, 200));
       authLogout();
       
-      console.log('User logged out successfully - all data cleared');
+      
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {

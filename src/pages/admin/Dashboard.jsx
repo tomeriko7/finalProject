@@ -91,7 +91,7 @@ export const Dashboard = () => {
 
         // Fetch dashboard statistics
         const statsResponse = await getDashboardStats();
-        console.log('Stats Response:', statsResponse);
+        
         if (statsResponse.success && statsResponse.stats) {
           setDashboardStats({
             totalUsers: statsResponse.stats.totalUsers || 0,
@@ -103,14 +103,14 @@ export const Dashboard = () => {
         
         // Fetch recent users
         const usersResponse = await getRecentUsers();
-        console.log('Users Response:', usersResponse);
+        
         if (usersResponse.success && usersResponse.users) {
           setRecentUsers(usersResponse.users);
         }
         
         // Fetch recent orders
         const ordersResponse = await getRecentOrders();
-        console.log('Orders Response:', ordersResponse);
+        
         if (ordersResponse.success) {
           setRecentOrders(ordersResponse.orders || []);
         } else {
@@ -120,7 +120,7 @@ export const Dashboard = () => {
         
         // Fetch sales statistics
         const salesResponse = await getSalesStats('month');
-        console.log('Sales Response:', salesResponse);
+        
         if (salesResponse.success && salesResponse.stats) {
           setSalesStats({
             monthlySales: salesResponse.stats.monthlySales || [],

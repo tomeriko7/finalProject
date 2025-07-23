@@ -21,22 +21,21 @@ export const useCartSync = () => {
 
   const syncWithServer = useCallback(async () => {
     if (!isAuthenticated || loading) {
-      console.log('useCartSync: User not authenticated or still loading');
+      
       return;
     }
 
     try {
-      console.log('useCartSync: Starting sync with server...');
-      
+         
       // סנכרון מועדפים מהשרת
-      console.log('useCartSync: Fetching favorites from server...');
+      
       await dispatch(fetchFavorites()).unwrap();
       
       // בדיקה אם יש פריטים ב-localStorage שצריך לסנכרן
       const localCartItems = JSON.parse(localStorage.getItem('cart') || '[]');
       
       if (localCartItems.length > 0) {
-        console.log('useCartSync: Found local cart items, syncing with server...', localCartItems);
+        
         // סנכרון סל קניות מ-localStorage
         const cartItemsForSync = localCartItems.map(item => ({
           productId: item._id,
@@ -47,10 +46,10 @@ export const useCartSync = () => {
         
         // ניקוי localStorage לאחר סנכרון מוצלח
         localStorage.removeItem('cart');
-        console.log('useCartSync: Local cart synced and cleared');
+        
       } else {
         // אם אין פריטים ב-localStorage, טען מהשרת
-        console.log('useCartSync: No local cart items, fetching from server...');
+        console.error('useCartSync: No local cart items, fetching from server...');
         await dispatch(fetchCart()).unwrap();
       }
       
@@ -58,7 +57,6 @@ export const useCartSync = () => {
       localStorage.removeItem('favorites');
       localStorage.removeItem('favoritesQuantity');
       
-      console.log('useCartSync: Sync completed successfully');
       
     } catch (error) {
       console.error('useCartSync: Error syncing with server:', error);
@@ -71,7 +69,7 @@ export const useCartSync = () => {
     dispatch(setFavAuthStatus(isAuthenticated));
 
     if (isAuthenticated && !loading) {
-      console.log('useCartSync: User authenticated, triggering sync');
+      
       syncWithServer();
     }
   }, [isAuthenticated, loading, dispatch, syncWithServer]);
