@@ -79,7 +79,7 @@ async function startServer() {
   });
 
   // Enable CORS
-  const corsOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const corsOrigin = [ 'http://localhost:3000','https://hatene.netlify.app'];
   app.use(
     cors({
       origin: corsOrigin,
