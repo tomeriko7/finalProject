@@ -18,8 +18,8 @@ services:
     name: finalproject-frontend
     env: node
     plan: free
-    buildCommand: npm install && NODE_OPTIONS="--max-old-space-size=512" npm run build
-    startCommand: npm start
+    buildCommand: cd front && npm install && NODE_OPTIONS="--max-old-space-size=512" npm run build
+    startCommand: cd front && npm start
     healthCheckPath: /
     envVars:
       - key: NODE_OPTIONS
