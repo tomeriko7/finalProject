@@ -79,18 +79,18 @@ async function startServer() {
   });
 
   // Enable CORS
-  const corsOrigin = [ 'http://localhost:3000','https://hatene.netlify.app'];
+  const corsOrigin ='https://hatene.netlify.app'
   app.use(
     cors({
-      origin: corsOrigin,
+      origin: 'https://hatene.netlify.app',
       credentials: true,
     })
   );
-  logger.info('CORS enabled', { origin: corsOrigin });
+  logger.info('CORS enabled', { origin: 'https://hatene.netlify.app' });
 
   // Set security headers
   app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin',corsOrigin);
+    res.setHeader('Access-Control-Allow-Origin','https://hatene.netlify.app');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
