@@ -3,12 +3,12 @@ import { Box, Container, Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../services/AuthContext";
 
-import herovideo1 from "../../assets/images/herovideo1.jpg";
-import herovideo2 from "../../assets/images/herovideo2.jpg";
-// import herovideo3 from "../../assets/images/herovideo3.mp4";
-// import herovideo4 from "../../assets/images/herovideo4.mp4";
+import herovideo1 from "../../assets/images/herovideo1.mp4";
+import herovideo2 from "../../assets/images/herovideo2.mp4";
+import herovideo3 from "../../assets/images/herovideo3.mp4";
+import herovideo4 from "../../assets/images/herovideo4.mp4";
 
-const videos = [herovideo1, herovideo2];
+const videos = [herovideo1, herovideo2,herovideo3 , herovideo4];
 
 export const Hero = () => {
   const { user } = useContext(AuthContext);
@@ -41,7 +41,7 @@ export const Hero = () => {
       }}
     >
       {/* וידאו קודם */}
-      {/* {prevIndex !== null && (
+       {prevIndex !== null && (
         <video
           key={`video-${prevIndex}`}
           src={videos[prevIndex]}
@@ -61,9 +61,9 @@ export const Hero = () => {
             zIndex: 0,
           }}
         />
-      )} */}
+      )} 
 
-      {/* וידאו נוכחי
+       {/* וידאו נוכחי */}
       <video
         key={`video-${currentIndex}`}
         src={videos[currentIndex]}
@@ -82,7 +82,7 @@ export const Hero = () => {
           transition: "opacity 1.8s ease-in-out",
           zIndex: 1,
         }}
-      /> */}
+      /> 
 
       {/* שכבת צבע כהה חצי-שקופה */}
       <Box
