@@ -4,8 +4,8 @@ services:
     name: finalproject-backend
     env: node
     plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
     healthCheckPath: /
     envVars:
       - key: PORT
@@ -18,6 +18,6 @@ services:
     name: finalproject-frontend
     env: node
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm run start
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     healthCheckPath: /
