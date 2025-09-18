@@ -77,21 +77,11 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
 
     try {
       if (isAuthenticated) {
-        // משתמש מחובר - שמירה בשרת
-        await dispatch(addToCartAsync({ 
-          productId: product._id, 
-          quantity: 1 
-        })).unwrap();
-      } else {
-        // משתמש לא מחובר - שמירה ב-localStorage
-        dispatch(addToCart({ product }));
-      }
-      
-      setSnackbar({
-        open: true,
-        message: "המוצר נוסף לעגלה בהצלחה!",
-        severity: "success",
-      });
+  await dispatch(addToCartAsync({ productId: product._id, quantity: 1 })).unwrap();
+  setSnackbar({ open: true, message: "המוצר נוסף לעגלה בהצלחה!", severity: "success" });
+} else {
+  setSnackbar({ open: true, message: "עליך להתחבר כדי להוסיף מוצרים לעגלה", severity: "warning" });
+}
     } catch (error) {
       setSnackbar({
         open: true,
