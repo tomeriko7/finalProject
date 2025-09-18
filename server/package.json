@@ -4,7 +4,6 @@
   "description": "Backend server for flower shop with authentication system",
   "main": "server.js",
   "type": "module",
-  
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -31,7 +30,8 @@
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
-    "multer": "^2.0.1"
+    "multer": "^2.0.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
