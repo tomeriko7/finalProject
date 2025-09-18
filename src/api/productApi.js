@@ -43,7 +43,7 @@ export const getProducts = async ({
       },
     };
   } catch (error) {
-    throw error.response?.data?.message || "Failed to fetch products";
+    throw new Error(error.response?.data?.message || "Failed to fetch products");
   }
 };
 
@@ -74,7 +74,7 @@ export const getTopProducts = async () => {
       data: response.data.data,
     };
   } catch (error) {
-    throw error.response?.data?.message || "Failed to fetch top products";
+    throw new Error(error.response?.data?.message || "Failed to fetch top products");
   }
 };
 
@@ -87,7 +87,7 @@ export const getProductById = async (id) => {
       data: response.data.data,
     };
   } catch (error) {
-    throw error.response?.data?.message || "Failed to fetch product";
+    throw new Error(error.response?.data?.message || "Failed to fetch product");
   }
 };
 
@@ -112,15 +112,15 @@ export const createProduct = async (productData, token) => {
     console.error("Error in createProduct:", error);
 
     if (error.response?.data?.message) {
-      throw error.response.data.message;
+      throw new Error(error.response.data.message);
     } else if (error.response?.status === 400) {
-      throw "נתונים לא תקינים - אנא בדוק את כל השדות";
+      throw new Error("נתונים לא תקינים - אנא בדוק את כל השדות");
     } else if (error.response?.status === 401) {
-      throw "אין הרשאה - אנא התחבר מחדש";
+      throw new Error("אין הרשאה - אנא התחבר מחדש");
     } else if (error.response?.status === 403) {
-      throw "אין הרשאות מנהל";
+      throw new Error("אין הרשאות מנהל");
     } else {
-      throw error?.message || "Failed to create product";
+      throw new Error(error?.message || "Failed to create product");
     }
   }
 };
@@ -150,17 +150,17 @@ export const updateProduct = async (id, productData, token) => {
     console.error("Error in updateProduct:", error);
 
     if (error.response?.data?.message) {
-      throw error.response.data.message;
+      throw new Error(error.response.data.message);
     } else if (error.response?.status === 400) {
-      throw "נתונים לא תקינים - אנא בדוק את כל השדות";
+      throw new Error("נתונים לא תקינים - אנא בדוק את כל השדות");
     } else if (error.response?.status === 401) {
-      throw "אין הרשאה - אנא התחבר מחדש";
+      throw new Error("אין הרשאה - אנא התחבר מחדש");
     } else if (error.response?.status === 403) {
-      throw "אין הרשאות מנהל";
+      throw new Error("אין הרשאות מנהל");
     } else if (error.response?.status === 404) {
-      throw "המוצר לא נמצא";
+      throw new Error("המוצר לא נמצא");
     } else {
-      throw error?.message || "Failed to update product";
+      throw new Error(error?.message || "Failed to update product");
     }
   }
 };
@@ -186,7 +186,7 @@ export const updateProductStock = async (
       message: "Stock updated successfully",
     };
   } catch (error) {
-    throw error.response?.data?.message || "Failed to update product stock";
+    throw new Error(error.response?.data?.message || "Failed to update product stock");
   }
 };
 
@@ -210,7 +210,7 @@ export const deleteProduct = async (id, token) => {
       message: "Product deleted successfully",
     };
   } catch (error) {
-    throw error.response?.data?.message || "Failed to delete product";
+    throw new Error(error.response?.data?.message || "Failed to delete product");
   }
 };
 
@@ -239,7 +239,7 @@ export const uploadProductImage = async (imageFile, token) => {
       message: "Image uploaded successfully",
     };
   } catch (error) {
-    throw error.response?.data?.message || "Failed to upload image";
+    throw new Error(error.response?.data?.message || "Failed to upload image");
   }
 };
 
@@ -259,7 +259,7 @@ export const createProductReview = async (productId, reviewData, token) => {
       message: "Review submitted successfully",
     };
   } catch (error) {
-    throw error.response?.data?.message || "Failed to submit review";
+    throw new Error(error.response?.data?.message || "Failed to submit review");
   }
 };
 
