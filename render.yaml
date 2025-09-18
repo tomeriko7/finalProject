@@ -18,6 +18,11 @@ services:
     name: finalproject-frontend
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && NODE_OPTIONS="--max-old-space-size=512" npm run build
     startCommand: npm start
     healthCheckPath: /
+    envVars:
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=512
+      - key: REACT_APP_API_URL
+        value: https://finalproject-backend.onrender.com 
