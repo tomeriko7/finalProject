@@ -181,7 +181,7 @@ export const Footer = () => {
         {/* זכויות יוצרים */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isMobile ? 'column' : 'row' }}>
           <Typography variant="body2" sx={{ mb: isMobile ? 2 : 0 }}>
-            © {new Date().getFullYear()} 2024 Hatene - כל הזכויות שמורות
+            © {new Date().getFullYear()} Hatene -ל כל הזכויות שמורות
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
             {!isMobile && (

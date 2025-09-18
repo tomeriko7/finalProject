@@ -293,7 +293,7 @@ const MobileMenu = ({
             }}
           >
             <Typography variant="caption" color="text.secondary">
-              © 2024 Hatene - כל הזכויות שמורות
+              © {new Date().getFullYear()} Hatene - כל הזכויות שמורות
             </Typography>
           </Box>
         </Box>
