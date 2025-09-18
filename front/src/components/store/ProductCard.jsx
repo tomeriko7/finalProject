@@ -30,13 +30,10 @@ import {
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { AuthContext } from "../../services/AuthContext";
-import { 
-  addToCart, 
-  addToCartAsync 
-} from "../../store/slices/cartSlice";
-import { 
-  toggleFavorite, 
-  toggleFavoriteAsync 
+import { addToCart, addToCartAsync } from "../../store/slices/cartSlice";
+import {
+  toggleFavorite,
+  toggleFavoriteAsync,
 } from "../../store/slices/favoritesSlice";
 import { formatPrice } from "../../utils/formatters";
 
@@ -57,7 +54,7 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
   // בדיקה האם המשתמש מחובר דרך AuthContext
   const { user } = useContext(AuthContext);
   const isAuthenticated = !!user;
-  
+
   // בדיקה האם המוצר נמצא במועדפים
   const favorites = useSelector((state) => state.favorites.favorites);
   const productId = product.id || product._id;
@@ -77,11 +74,20 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
 
     try {
       if (isAuthenticated) {
-  await dispatch(addToCartAsync({ productId: product._id, quantity: 1 })).unwrap();
-  setSnackbar({ open: true, message: "המוצר נוסף לעגלה בהצלחה!", severity: "success" });
-} else {
-  setSnackbar({ open: true, message: "עליך להתחבר כדי להוסיף מוצרים לעגלה", severity: "warning" });
-}
+        // משתמש מחובר - שמירה בשרת
+        await dispatch(
+          addToCartAsync({
+            productId: product._id,
+            quantity: 1,
+          })
+        ).unwrap();
+      } else {
+        setSnackbar({
+          open: true,
+          message: "עליך להתחבר כדי להוסיף מוצרים לעגלה",
+          severity: "warning",
+        });
+      }
     } catch (error) {
       setSnackbar({
         open: true,
@@ -92,20 +98,14 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
   };
 
   const handleToggleFavorite = async () => {
-    
-    
     try {
       if (isAuthenticated) {
-        
-        
         // עדכון אופטימי - עדכן את המצב מיידית לפני השליחה לשרת
         dispatch(toggleFavorite({ product }));
-        
+
         // שליחה לשרת
         await dispatch(toggleFavoriteAsync(product._id)).unwrap();
-        
       } else {
-        
         // משתמש לא מחובר - שמירה ב-localStorage
         dispatch(toggleFavorite({ product }));
       }
@@ -116,13 +116,13 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
         severity: "success",
       });
     } catch (error) {
-      console.error('Error in handleToggleFavorite:', error);
-      
+      console.error("Error in handleToggleFavorite:", error);
+
       // אם השליחה לשרת נכשלה ויש משתמש מחובר - החזר את השינוי
       if (isAuthenticated) {
         dispatch(toggleFavorite({ product }));
       }
-      
+
       setSnackbar({
         open: true,
         message: "שגיאה בעדכון המועדפים",
@@ -927,22 +927,21 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                   disabled={isOutOfStock}
                   startIcon={<ShoppingCartIcon />}
                   sx={{
-              flex: 1,
-              borderRadius: 0,
-              borderLeft: "1px solid",
-              borderColor: "divider",
-              py: 1.5,
-              direction: "ltr",
-              "&:hover": {
-                backgroundColor: "primary.main",
-                color: "white",
-              },
-            }}
+                    flex: 1,
+                    borderRadius: 0,
+                    borderLeft: "1px solid",
+                    borderColor: "divider",
+                    py: 1.5,
+                    direction: "ltr",
+                    "&:hover": {
+                      backgroundColor: "primary.main",
+                      color: "white",
+                    },
+                  }}
                 >
                   {isOutOfStock ? "אזל מהמלאי" : "הוסף לעגלה"}
                 </Button>
                 <Button
-                
                   variant="outlined"
                   onClick={handleToggleFavorite}
                   startIcon={
@@ -953,17 +952,17 @@ const ProductCard = ({ product, viewMode = "grid" }) => {
                     )
                   }
                   sx={{
-              flex: 1,
-              borderRadius: 0,
-              borderLeft: "1px solid",
-              borderColor: "divider",
-              py: 1.5,
-              direction: "ltr",
-              "&:hover": {
-                backgroundColor: "primary.main",
-                color: "white",
-              },
-            }}
+                    flex: 1,
+                    borderRadius: 0,
+                    borderLeft: "1px solid",
+                    borderColor: "divider",
+                    py: 1.5,
+                    direction: "ltr",
+                    "&:hover": {
+                      backgroundColor: "primary.main",
+                      color: "white",
+                    },
+                  }}
                 >
                   {isFavorite ? "הסר ממועדפים" : "שמור למועדפים"}
                 </Button>
