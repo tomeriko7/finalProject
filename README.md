@@ -69,6 +69,7 @@ This is a full-stack e-commerce platform built with React.js for the frontend an
 2. Install dependencies for both frontend and backend
    ```bash
    # Install frontend dependencies
+   cd front
    npm install
    
    # Install backend dependencies

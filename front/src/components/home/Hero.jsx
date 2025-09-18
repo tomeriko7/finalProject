@@ -6,9 +6,9 @@ import { AuthContext } from "../../services/AuthContext";
 import herovideo1 from "../../assets/images/herovideo1.mp4";
 import herovideo2 from "../../assets/images/herovideo2.mp4";
 import herovideo3 from "../../assets/images/herovideo3.mp4";
-import herovideo4 from "../../assets/images/herovideo4.mp4";
 
-const videos = [herovideo1, herovideo2,herovideo3 , herovideo4];
+
+const videos = [herovideo1, herovideo2,herovideo3 ];
 
 export const Hero = () => {
   const { user } = useContext(AuthContext);
